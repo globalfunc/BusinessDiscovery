@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureDiscoveryAccess;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ReferralGuard;
 use Illuminate\Foundation\Application;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'referral' => ReferralGuard::class,
+            'discovery.access' => EnsureDiscoveryAccess::class,
         ]);
 
         $middleware->redirectGuestsTo('/admin/login');

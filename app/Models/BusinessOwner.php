@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BusinessOwner extends Model
@@ -56,5 +57,10 @@ class BusinessOwner extends Model
     public function activityEvents(): HasMany
     {
         return $this->hasMany(ActivityEvent::class);
+    }
+
+    public function discoverySession(): HasOne
+    {
+        return $this->hasOne(DiscoverySession::class);
     }
 }

@@ -7,9 +7,12 @@ use App\Enums\ReferralTokenState;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityEvent;
 use App\Models\BusinessOwner;
+use App\Models\DiscoverySession;
 use App\Models\ReferralToken;
+use App\Support\LanguageResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,16 +28,24 @@ class ReferralLandingController extends Controller
 
         $confirmed = (bool) session('referral_confirmed_'.$referralToken->id);
 
+        $language = LanguageResolver::resolve($request, $businessOwner);
+        if ($request->cookie(LanguageResolver::COOKIE_NAME) === null) {
+            Cookie::queue(LanguageResolver::COOKIE_NAME, $language->value, 525600);
+        }
+
+        $hasStartedDiscovery = DiscoverySession::where('business_owner_id', $businessOwner->id)->exists();
+
         return Inertia::render('Referral/Landing', [
             'token' => $token,
             'confirmed' => $confirmed,
+            'hasStartedDiscovery' => $hasStartedDiscovery,
             'businessOwner' => [
                 'name' => $businessOwner->name,
                 'company' => $businessOwner->company,
                 'logo_path' => $businessOwner->logo_path ? Storage::disk('public')->url($businessOwner->logo_path) : null,
                 'greeting_override' => $businessOwner->greeting_override,
-                'language' => $businessOwner->language?->value ?? 'en',
             ],
+            'language' => $language->value,
         ]);
     }
 

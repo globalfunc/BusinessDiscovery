@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TaxonomyCategoryController;
 use App\Http\Controllers\Admin\TaxonomyNicheController;
+use App\Http\Controllers\Discovery\DiscoveryController;
 use App\Http\Controllers\Referral\ReferralLandingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -58,4 +59,13 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 Route::middleware(['referral'])->group(function () {
     Route::get('/r/{token}', [ReferralLandingController::class, 'show'])->name('referral.show');
     Route::post('/r/{token}/confirm', [ReferralLandingController::class, 'confirm'])->name('referral.confirm');
+});
+
+Route::post('/language', [DiscoveryController::class, 'setLanguage'])->name('language.set');
+
+Route::middleware(['discovery.access'])->prefix('discovery')->name('discovery.')->group(function () {
+    Route::get('/{phase?}', [DiscoveryController::class, 'show'])->name('show');
+    Route::patch('/answers', [DiscoveryController::class, 'updateAnswer'])->name('answers.update');
+    Route::post('/navigate', [DiscoveryController::class, 'navigate'])->name('navigate');
+    Route::post('/submit', [DiscoveryController::class, 'submit'])->name('submit');
 });
