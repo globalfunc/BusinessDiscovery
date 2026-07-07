@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\ServiceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Service extends Model
 {
-    /** @use HasFactory<\Database\Factories\ServiceFactory> */
+    /** @use HasFactory<ServiceFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -18,6 +19,8 @@ class Service extends Model
         'base_features',
         'saas_eligible',
         'tags',
+        'price_min',
+        'price_max',
         'hidden',
     ];
 

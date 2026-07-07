@@ -1,8 +1,13 @@
 <?php
 
 use App\Http\Controllers\Admin\BusinessOwnerController;
+use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReferralTokenController;
+use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\TaxonomyCategoryController;
+use App\Http\Controllers\Admin\TaxonomyNicheController;
 use App\Http\Controllers\Referral\ReferralLandingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -27,6 +32,21 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
             Route::post('/{referralToken}/mark-sent', [ReferralTokenController::class, 'markSent'])->name('mark-sent');
             Route::patch('/{referralToken}/expiry', [ReferralTokenController::class, 'setExpiry'])->name('expiry');
         });
+
+    Route::prefix('content')->name('content.')->group(function () {
+        Route::get('/', [ContentController::class, 'index'])->name('index');
+
+        Route::post('/taxonomy-categories', [TaxonomyCategoryController::class, 'store'])->name('taxonomy-categories.store');
+        Route::patch('/taxonomy-categories/{taxonomyCategory}', [TaxonomyCategoryController::class, 'update'])->name('taxonomy-categories.update');
+
+        Route::post('/taxonomy-categories/{taxonomyCategory}/niches', [TaxonomyNicheController::class, 'store'])->name('taxonomy-niches.store');
+        Route::patch('/taxonomy-niches/{taxonomyNiche}', [TaxonomyNicheController::class, 'update'])->name('taxonomy-niches.update');
+
+        Route::post('/services', [ServiceController::class, 'store'])->name('services.store');
+        Route::patch('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
+
+        Route::patch('/settings/{key}', [SettingController::class, 'update'])->name('settings.update');
+    });
 });
 
 Route::middleware(['referral'])->group(function () {

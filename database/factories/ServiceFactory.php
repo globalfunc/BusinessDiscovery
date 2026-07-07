@@ -2,10 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Service;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Service>
+ * @extends Factory<Service>
  */
 class ServiceFactory extends Factory
 {
@@ -19,12 +21,14 @@ class ServiceFactory extends Factory
         $en = $this->faker->unique()->words(3, true);
 
         return [
-            'key' => \Illuminate\Support\Str::slug($en),
+            'key' => Str::slug($en),
             'name' => ['en' => ucfirst($en), 'bg' => ucfirst($en)],
             'one_liner' => ['en' => $this->faker->sentence(), 'bg' => $this->faker->sentence()],
             'base_features' => $this->faker->words(5),
             'saas_eligible' => $this->faker->boolean(),
             'tags' => $this->faker->words(3),
+            'price_min' => $this->faker->numberBetween(100, 500),
+            'price_max' => $this->faker->numberBetween(600, 2000),
             'hidden' => false,
         ];
     }

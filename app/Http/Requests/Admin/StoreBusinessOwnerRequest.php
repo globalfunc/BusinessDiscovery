@@ -13,6 +13,14 @@ class StoreBusinessOwnerRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'language' => $this->input('language') === '' ? null : $this->input('language'),
+            'pre_selected_niche_id' => $this->input('pre_selected_niche_id') === '' ? null : $this->input('pre_selected_niche_id'),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
@@ -22,6 +30,7 @@ class StoreBusinessOwnerRequest extends FormRequest
             'greeting_override' => ['nullable', 'string', 'max:2000'],
             'admin_context' => ['nullable', 'string', 'max:5000'],
             'language' => ['nullable', Rule::enum(Language::class)],
+            'pre_selected_niche_id' => ['nullable', 'integer', 'exists:taxonomy_niches,id'],
         ];
     }
 }

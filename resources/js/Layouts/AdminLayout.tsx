@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
     { label: 'Pipeline', icon: Kanban },
     { label: 'Specs', icon: FileText },
     { label: 'Proposals', icon: FileSignature },
-    { label: 'Content', icon: Layers },
+    { label: 'Content', icon: Layers, routeName: 'admin.content.index', href: '/admin/content' },
     { label: 'AI Settings', icon: Settings2 },
     { label: 'Usage', icon: BarChart3 },
 ];

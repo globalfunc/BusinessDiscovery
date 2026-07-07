@@ -14,6 +14,14 @@ class UpdateBusinessOwnerRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'language' => $this->input('language') === '' ? null : $this->input('language'),
+            'pre_selected_niche_id' => $this->input('pre_selected_niche_id') === '' ? null : $this->input('pre_selected_niche_id'),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
@@ -24,6 +32,7 @@ class UpdateBusinessOwnerRequest extends FormRequest
             'admin_context' => ['nullable', 'string', 'max:5000'],
             'language' => ['nullable', Rule::enum(Language::class)],
             'status' => ['required', Rule::enum(BusinessOwnerStatus::class)],
+            'pre_selected_niche_id' => ['nullable', 'integer', 'exists:taxonomy_niches,id'],
         ];
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\StoreBusinessOwnerRequest;
 use App\Http\Requests\Admin\UpdateBusinessOwnerRequest;
 use App\Models\ActivityEvent;
 use App\Models\BusinessOwner;
+use App\Models\TaxonomyNiche;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -15,6 +16,20 @@ use Inertia\Response;
 
 class BusinessOwnerController extends Controller
 {
+    private function nicheOptions()
+    {
+        return TaxonomyNiche::query()
+            ->where('hidden', false)
+            ->with('category')
+            ->orderBy('sort')
+            ->get()
+            ->map(fn (TaxonomyNiche $niche) => [
+                'id' => $niche->id,
+                'name' => $niche->name,
+                'category_name' => $niche->category?->name,
+            ]);
+    }
+
     public function index(): Response
     {
         $businessOwners = BusinessOwner::query()
@@ -34,6 +49,7 @@ class BusinessOwnerController extends Controller
 
         return Inertia::render('Admin/BusinessOwners/Index', [
             'businessOwners' => $businessOwners,
+            'niches' => $this->nicheOptions(),
         ]);
     }
 
@@ -70,10 +86,12 @@ class BusinessOwnerController extends Controller
                 'greeting_override' => $businessOwner->greeting_override,
                 'admin_context' => $businessOwner->admin_context,
                 'language' => $businessOwner->language?->value,
+                'pre_selected_niche_id' => $businessOwner->pre_selected_niche_id,
                 'status' => $businessOwner->status->value,
                 'current_stage' => $businessOwner->current_stage->value,
                 'created_at' => $businessOwner->created_at?->toIso8601String(),
             ],
+            'niches' => $this->nicheOptions(),
             'referralTokens' => $businessOwner->referralTokens->map(fn ($t) => [
                 'id' => $t->id,
                 'state' => $t->state->value,

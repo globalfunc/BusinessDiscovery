@@ -28,9 +28,16 @@ type BusinessOwner = {
     greeting_override: string | null;
     admin_context: string | null;
     language: string | null;
+    pre_selected_niche_id: number | null;
     status: string;
     current_stage: string;
     created_at: string | null;
+};
+
+type NicheOption = {
+    id: number;
+    name: { en: string; bg: string };
+    category_name: { en: string; bg: string } | null;
 };
 
 type ReferralToken = {
@@ -68,10 +75,12 @@ export default function BusinessOwnerShow({
     businessOwner,
     referralTokens,
     activity,
+    niches,
 }: {
     businessOwner: BusinessOwner;
     referralTokens: ReferralToken[];
     activity: ActivityEvent[];
+    niches: NicheOption[];
 }) {
     const { props } = usePage<{ flash?: { plainReferralUrl?: string | null } }>();
     const { toast } = useToast();
@@ -86,6 +95,7 @@ export default function BusinessOwnerShow({
         greeting_override: string;
         admin_context: string;
         language: string;
+        pre_selected_niche_id: string;
         status: string;
         _method: string;
     }>({
@@ -95,6 +105,7 @@ export default function BusinessOwnerShow({
         greeting_override: businessOwner.greeting_override ?? '',
         admin_context: businessOwner.admin_context ?? '',
         language: businessOwner.language ?? '',
+        pre_selected_niche_id: businessOwner.pre_selected_niche_id?.toString() ?? '',
         status: businessOwner.status,
         _method: 'put',
     });
@@ -250,6 +261,23 @@ export default function BusinessOwnerShow({
                                                 <option value="archived">Archived</option>
                                             </Select>
                                         </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-1.5">
+                                        <Label htmlFor="edit-niche">Pre-selected niche</Label>
+                                        <Select
+                                            id="edit-niche"
+                                            value={editForm.data.pre_selected_niche_id}
+                                            onChange={(e) => editForm.setData('pre_selected_niche_id', e.target.value)}
+                                        >
+                                            <option value="">None — BO picks their own niche</option>
+                                            {niches.map((niche) => (
+                                                <option key={niche.id} value={niche.id}>
+                                                    {niche.category_name ? `${niche.category_name.en} — ` : ''}
+                                                    {niche.name.en}
+                                                </option>
+                                            ))}
+                                        </Select>
                                     </div>
 
                                     <div className="flex flex-col gap-1.5">

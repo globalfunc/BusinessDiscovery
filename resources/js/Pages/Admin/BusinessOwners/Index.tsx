@@ -42,7 +42,19 @@ const stageLabels: Record<string, string> = {
     lost: 'Lost',
 };
 
-export default function BusinessOwnersIndex({ businessOwners }: { businessOwners: BusinessOwnerRow[] }) {
+type NicheOption = {
+    id: number;
+    name: { en: string; bg: string };
+    category_name: { en: string; bg: string } | null;
+};
+
+export default function BusinessOwnersIndex({
+    businessOwners,
+    niches,
+}: {
+    businessOwners: BusinessOwnerRow[];
+    niches: NicheOption[];
+}) {
     const [open, setOpen] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm<{
         name: string;
@@ -51,6 +63,7 @@ export default function BusinessOwnersIndex({ businessOwners }: { businessOwners
         greeting_override: string;
         admin_context: string;
         language: string;
+        pre_selected_niche_id: string;
     }>({
         name: '',
         company: '',
@@ -58,6 +71,7 @@ export default function BusinessOwnersIndex({ businessOwners }: { businessOwners
         greeting_override: '',
         admin_context: '',
         language: '',
+        pre_selected_niche_id: '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -146,6 +160,23 @@ export default function BusinessOwnersIndex({ businessOwners }: { businessOwners
                                         <option value="">Auto-detect (browser default)</option>
                                         <option value="bg">Bulgarian</option>
                                         <option value="en">English</option>
+                                    </Select>
+                                </div>
+
+                                <div className="flex flex-col gap-1.5">
+                                    <Label htmlFor="pre_selected_niche_id">Pre-selected niche</Label>
+                                    <Select
+                                        id="pre_selected_niche_id"
+                                        value={data.pre_selected_niche_id}
+                                        onChange={(e) => setData('pre_selected_niche_id', e.target.value)}
+                                    >
+                                        <option value="">None — BO picks their own niche</option>
+                                        {niches.map((niche) => (
+                                            <option key={niche.id} value={niche.id}>
+                                                {niche.category_name ? `${niche.category_name.en} — ` : ''}
+                                                {niche.name.en}
+                                            </option>
+                                        ))}
                                     </Select>
                                 </div>
 
