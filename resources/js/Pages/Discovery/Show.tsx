@@ -7,10 +7,13 @@ import { Phase2ServicesSelection } from '@/components/discovery/phases/Phase2Ser
 import { Phase3Branding } from '@/components/discovery/phases/Phase3Branding';
 import { Phase4ContentSocial } from '@/components/discovery/phases/Phase4ContentSocial';
 import { Phase5GrowthOperations } from '@/components/discovery/phases/Phase5GrowthOperations';
+import { Phase6BillingTimeline } from '@/components/discovery/phases/Phase6BillingTimeline';
+import { ReviewPreview } from '@/components/discovery/ReviewPreview';
 import type { CatalogService } from '@/components/discovery/CatalogServiceCard';
 import type { SelectedServiceRecord } from '@/components/discovery/SelectedServiceCard';
 import type { UploadRecord } from '@/components/discovery/UploadZone';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useAutosaveField } from '@/hooks/useAutosaveField';
 import { useTranslation, type Locale } from '@/lib/i18n';
@@ -40,6 +43,9 @@ type Props = {
     showPricesToBo: boolean;
     uploads: UploadRecord[] | null;
     uploadQuota: { used: number; limit: number } | null;
+    saasEligible: boolean;
+    approxTotal: { min: number; max: number } | null;
+    reviewMarkdown: string | null;
 };
 
 export default function DiscoveryShow({
@@ -56,11 +62,16 @@ export default function DiscoveryShow({
     showPricesToBo,
     uploads,
     uploadQuota,
+    saasEligible,
+    approxTotal,
+    reviewMarkdown,
 }: Props) {
     const locale = (language === 'bg' ? 'bg' : 'en') as Locale;
     const t = useTranslation(locale);
     const [submitting, setSubmitting] = useState(false);
     const [phase1Valid, setPhase1Valid] = useState(true);
+    const [phase6Valid, setPhase6Valid] = useState(true);
+    const [confirmOpen, setConfirmOpen] = useState(false);
 
     const phaseIndex = phases.findIndex((p) => p.key === phase);
     const previousPhase = phaseIndex > 0 ? phases[phaseIndex - 1] : null;
@@ -72,6 +83,7 @@ export default function DiscoveryShow({
     const isPhase3 = phase === 'phase_3';
     const isPhase4 = phase === 'phase_4';
     const isPhase5 = phase === 'phase_5';
+    const isPhase6 = phase === 'phase_6';
 
     const initialNote = typeof answers.notes === 'string' ? answers.notes : '';
     const { value, setValue, saveState } = useAutosaveField(phase, 'notes', initialNote);
@@ -81,10 +93,23 @@ export default function DiscoveryShow({
         router.visit(route('discovery.show', { phase: previousPhase.key }));
     };
 
+    const submitDiscovery = () => {
+        setSubmitting(true);
+        router.post(
+            route('discovery.submit'),
+            {},
+            {
+                onFinish: () => {
+                    setSubmitting(false);
+                    setConfirmOpen(false);
+                },
+            },
+        );
+    };
+
     const goContinue = () => {
         if (isReview) {
-            setSubmitting(true);
-            router.post(route('discovery.submit'), {}, { onFinish: () => setSubmitting(false) });
+            setConfirmOpen(true);
             return;
         }
         if (!nextPhase) return;
@@ -109,12 +134,29 @@ export default function DiscoveryShow({
                         savedLabel={t('common.saved')}
                         saveState={saveState}
                         backDisabled={!previousPhase}
-                        continueDisabled={submitting || (isPhase1 && !phase1Valid)}
+                        continueDisabled={submitting || (isPhase1 && !phase1Valid) || (isPhase6 && !phase6Valid)}
                     />
                 )
             }
         >
             <Head title={t(`phases.${phase}.title`)} />
+
+            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{t('submit.confirmTitle')}</DialogTitle>
+                        <DialogDescription>{t('submit.confirmBody')}</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setConfirmOpen(false)} disabled={submitting}>
+                            {t('common.cancel')}
+                        </Button>
+                        <Button onClick={submitDiscovery} disabled={submitting}>
+                            {t('submit.confirmCta')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {isReview && isSubmitted ? (
                 <div className="flex flex-col gap-3 rounded-bo border border-line bg-surface p-6 text-center">
@@ -163,6 +205,17 @@ export default function DiscoveryShow({
                         <Phase4ContentSocial t={t} answers={answers} />
                     ) : isPhase5 ? (
                         <Phase5GrowthOperations t={t} answers={answers} />
+                    ) : isPhase6 ? (
+                        <Phase6BillingTimeline
+                            t={t}
+                            answers={answers}
+                            saasEligible={saasEligible}
+                            showPricesToBo={showPricesToBo}
+                            approxTotal={approxTotal}
+                            onValidityChange={setPhase6Valid}
+                        />
+                    ) : isReview ? (
+                        <ReviewPreview t={t} markdown={reviewMarkdown ?? ''} />
                     ) : (
                         <>
                             <div className="rounded-md border border-dashed border-line-strong bg-surface-2 p-4 font-body text-sm text-text-faint">
@@ -184,7 +237,7 @@ export default function DiscoveryShow({
                         </>
                     )}
 
-                    {!isReview && !isPhase1 && !isPhase2 && (
+                    {!isReview && !isPhase1 && !isPhase2 && !isPhase6 && (
                         <div>
                             <Button variant="ghost" size="sm" onClick={goContinue} disabled={submitting}>
                                 {t('common.skip')}

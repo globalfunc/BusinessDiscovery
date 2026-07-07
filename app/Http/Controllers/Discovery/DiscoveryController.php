@@ -17,6 +17,7 @@ use App\Models\Setting;
 use App\Models\TaxonomyCategory;
 use App\Models\TaxonomyNiche;
 use App\Models\Upload;
+use App\Support\DiscoverySpecRenderer;
 use App\Support\LanguageResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -116,6 +117,22 @@ class DiscoveryController extends Controller
             ];
         }
 
+        $saasEligible = false;
+        $approxTotal = null;
+        if ($targetPhase === DiscoveryPhase::Phase6) {
+            $showPricesToBo = (bool) (Setting::query()->where('key', 'show_prices_to_bo')->first()?->value['enabled'] ?? false);
+            $saasEligible = $session->selectedServices()
+                ->whereNotNull('service_id')
+                ->whereHas('service', fn ($query) => $query->where('saas_eligible', true))
+                ->exists();
+            $approxTotal = $showPricesToBo ? $this->computeApproxTotal($session) : null;
+        }
+
+        $reviewMarkdown = null;
+        if ($targetPhase === DiscoveryPhase::Review) {
+            $reviewMarkdown = DiscoverySpecRenderer::render($session, $businessOwner);
+        }
+
         return Inertia::render('Discovery/Show', [
             'businessOwner' => [
                 'name' => $businessOwner->name,
@@ -143,7 +160,48 @@ class DiscoveryController extends Controller
             'showPricesToBo' => $showPricesToBo,
             'uploads' => $uploads,
             'uploadQuota' => $uploadQuota,
+            'saasEligible' => $saasEligible,
+            'approxTotal' => $approxTotal,
+            'reviewMarkdown' => $reviewMarkdown,
         ]);
+    }
+
+    /**
+     * Sums indicative prices across all selected services for the Phase 6
+     * "Approx. total" card (design.md §6.2b): catalog-linked entries price
+     * from the linked Service record (selected_services never copies price
+     * onto itself at add-time — see SelectedServiceController::store()),
+     * custom entries price from their own admin-set price_min/price_max.
+     * Entries with no price set on either side are skipped entirely.
+     *
+     * @return array{min: int, max: int}|null
+     */
+    private function computeApproxTotal(DiscoverySession $session): ?array
+    {
+        $selected = $session->selectedServices()->with('service')->get();
+
+        $min = 0;
+        $max = 0;
+        $hasAny = false;
+
+        foreach ($selected as $selectedService) {
+            $priceMin = $selectedService->service_id !== null
+                ? $selectedService->service?->price_min
+                : $selectedService->price_min;
+            $priceMax = $selectedService->service_id !== null
+                ? $selectedService->service?->price_max
+                : $selectedService->price_max;
+
+            if ($priceMin === null && $priceMax === null) {
+                continue;
+            }
+
+            $hasAny = true;
+            $min += $priceMin ?? $priceMax;
+            $max += $priceMax ?? $priceMin;
+        }
+
+        return $hasAny ? ['min' => $min, 'max' => $max] : null;
     }
 
     /**
@@ -234,6 +292,16 @@ class DiscoveryController extends Controller
         $targetIndex = array_search($targetPhase, $ordered, true);
 
         abort_if($targetIndex > $currentIndex + 1, 403, 'That phase has not been reached yet.');
+
+        if ($session->current_phase === DiscoveryPhase::Phase6 && $targetIndex > $currentIndex) {
+            $hasBillingModel = $session->answers()
+                ->where('phase', DiscoveryPhase::Phase6->value)
+                ->where('field_key', 'billing_model')
+                ->whereNotNull('value')
+                ->exists();
+
+            abort_unless($hasBillingModel, 422, 'Choose a billing model before continuing.');
+        }
 
         if ($targetIndex > $currentIndex) {
             $session->update(['current_phase' => $targetPhase]);

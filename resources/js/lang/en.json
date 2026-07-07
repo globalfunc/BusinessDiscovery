@@ -239,6 +239,89 @@
         },
         "enableToggleLabel": "Include this module"
     },
+    "phase6": {
+        "approxTotalLabel": "Approx. total",
+        "approxTotalCaption": "Estimate, not a final quote",
+        "billingHeading": "How would you like to pay for this?",
+        "billing": {
+            "one_time": {
+                "title": "One-time build",
+                "description": "Fixed price, self-managed after handover."
+            },
+            "build_support": {
+                "title": "Build + monthly support",
+                "description": "Bugs, small features, managed hosting & monitoring."
+            },
+            "saas_subscription": {
+                "title": "Service subscription",
+                "description": "Pay monthly for the solution as a managed service."
+            },
+            "advise_me": {
+                "title": "Not sure — advise me",
+                "description": "We'll recommend the best fit once we review your specification."
+            }
+        },
+        "billingRequiredHint": "Choose a billing model to continue — or pick \"Not sure — advise me\".",
+        "budgetHeading": "What's your budget range?",
+        "budgetMinLabel": "Minimum budget",
+        "budgetMaxLabel": "Maximum budget",
+        "timelineHeading": "When would you like to launch?",
+        "timeline": {
+            "asap": "ASAP",
+            "one_month": "Within 1 month",
+            "one_to_three_months": "1–3 months",
+            "flexible": "Flexible"
+        },
+        "timelineNoteLabel": "Any hard deadlines? (season, event…)",
+        "timelineNotePlaceholder": "e.g. Needs to launch before the summer season"
+    },
+    "review": {
+        "amendHeading": "What should we change?",
+        "amendPlaceholder": "Describe what you'd like to adjust about the specification...",
+        "amendComingSoon": "Coming soon — AI-assisted amendments land in a later session.",
+        "amendCta": "✨ Apply changes",
+        "noneRecorded": "Nothing recorded yet.",
+        "dcpPending": "A deeper goals & pain-points summary will appear here once the AI intake analysis is live.",
+        "customNicheFlag": "flagged for admin review",
+        "sections": {
+            "overview": "1. Business overview & context",
+            "goals": "2. Goals, pains & strengths",
+            "selectedServices": "3. Selected services",
+            "customServices": "4. Custom & suggested services",
+            "branding": "5. Branding & look/feel brief",
+            "contentSocial": "6. Content & social presence plan",
+            "growthOperations": "7. Growth, retention & operations",
+            "billingBudgetTimeline": "8. Billing model, budget & timeline",
+            "assets": "9. Uploaded assets inventory",
+            "openQuestions": "10. Open questions for the discovery call"
+        },
+        "fields": {
+            "name": "Name",
+            "company": "Company",
+            "website": "Website",
+            "niche": "Category / niche",
+            "intakeNotes": "Intake notes",
+            "features": "Features",
+            "note": "Note",
+            "referenceLink": "Reference link",
+            "styleDirection": "Style direction",
+            "colorPreference": "Color preference",
+            "contentNeeds": "Content needs",
+            "socialPlatforms": "Social platforms",
+            "postingCadence": "Posting cadence",
+            "contentAssistInterest": "Content assistance interest",
+            "leadgenManagedInterest": "Managed lead-gen interest",
+            "billingModel": "Billing model",
+            "budget": "Budget",
+            "timeline": "Timeline",
+            "timelineNote": "Timeline note"
+        },
+        "openQuestions": {
+            "scope": "Confirm the final scope and any must-have integrations.",
+            "timeline": "Confirm how flexible the launch timeline really is.",
+            "integrations": "Any existing tools or data that need to carry over?"
+        }
+    },
     "submit": {
         "cta": "Submit my specification",
         "confirmTitle": "Submit your specification?",
