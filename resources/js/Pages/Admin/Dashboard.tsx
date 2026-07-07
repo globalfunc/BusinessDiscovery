@@ -4,16 +4,16 @@ import { Activity, Kanban, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminLayout from '@/Layouts/AdminLayout';
 
-const kpis = [
-    { label: 'Total BOs' },
-    { label: 'Links visited' },
-    { label: 'In progress' },
-    { label: 'Submitted' },
-    { label: 'Proposals sent' },
-    { label: 'Closed' },
-];
+export default function Dashboard({ totalBusinessOwners }: { totalBusinessOwners: number }) {
+    const kpis = [
+        { label: 'Total BOs', value: totalBusinessOwners },
+        { label: 'Links visited' },
+        { label: 'In progress' },
+        { label: 'Submitted' },
+        { label: 'Proposals sent' },
+        { label: 'Closed' },
+    ];
 
-export default function Dashboard() {
     return (
         <AdminLayout>
             <Head title="Dashboard" />
@@ -29,7 +29,9 @@ export default function Dashboard() {
                 <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
                     {kpis.map((kpi) => (
                         <div key={kpi.label} className="rounded-admin border border-line bg-surface p-4">
-                            <div className="font-display text-3xl font-semibold tabular-nums text-text">—</div>
+                            <div className="font-display text-3xl font-semibold tabular-nums text-text">
+                                {kpi.value ?? '—'}
+                            </div>
                             <div className="mt-1 font-ui text-xs text-text-faint">{kpi.label}</div>
                         </div>
                     ))}

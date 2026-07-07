@@ -10,8 +10,10 @@ import {
     Settings2,
     Users,
 } from 'lucide-react';
-import { type ReactNode } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 
+import { Toaster } from '@/components/ui/toaster';
+import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 
 type NavItem = {
@@ -23,7 +25,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
     { label: 'Dashboard', icon: LayoutDashboard, routeName: 'admin.dashboard', href: '/admin/dashboard' },
-    { label: 'Business Owners', icon: Users },
+    { label: 'Business Owners', icon: Users, routeName: 'admin.business-owners.index', href: '/admin/business-owners' },
     { label: 'Pipeline', icon: Kanban },
     { label: 'Specs', icon: FileText },
     { label: 'Proposals', icon: FileSignature },
@@ -33,7 +35,17 @@ const navItems: NavItem[] = [
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-    const { url } = usePage();
+    const { url, props } = usePage<{ flash?: { success?: string | null } }>();
+    const { toast } = useToast();
+    const lastFlash = useRef<string | null>(null);
+
+    useEffect(() => {
+        const message = props.flash?.success;
+        if (message && message !== lastFlash.current) {
+            lastFlash.current = message;
+            toast({ title: message });
+        }
+    }, [props.flash?.success, toast]);
 
     return (
         <div className="flex min-h-screen bg-bg">
@@ -96,6 +108,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </aside>
 
             <main className="flex-1 overflow-y-auto px-8 py-8">{children}</main>
+            <Toaster />
         </div>
     );
 }
