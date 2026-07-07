@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\BusinessOwnerStatus;
 use App\Enums\Language;
 use App\Enums\PipelineStage;
+use Database\Factories\BusinessOwnerFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,8 +15,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BusinessOwner extends Model
 {
-    /** @use HasFactory<\Database\Factories\BusinessOwnerFactory> */
+    /** @use HasFactory<BusinessOwnerFactory> */
     use HasFactory;
+
     use SoftDeletes;
 
     protected $fillable = [
@@ -62,5 +64,10 @@ class BusinessOwner extends Model
     public function discoverySession(): HasOne
     {
         return $this->hasOne(DiscoverySession::class);
+    }
+
+    public function uploads(): HasMany
+    {
+        return $this->hasMany(Upload::class);
     }
 }

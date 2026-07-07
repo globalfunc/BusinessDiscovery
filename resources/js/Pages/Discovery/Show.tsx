@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { BottomActionBar } from '@/components/discovery/BottomActionBar';
 import { Phase1BusinessProfile } from '@/components/discovery/phases/Phase1BusinessProfile';
 import { Phase2ServicesSelection } from '@/components/discovery/phases/Phase2ServicesSelection';
+import { Phase3Branding } from '@/components/discovery/phases/Phase3Branding';
 import type { CatalogService } from '@/components/discovery/CatalogServiceCard';
 import type { SelectedServiceRecord } from '@/components/discovery/SelectedServiceCard';
+import type { UploadRecord } from '@/components/discovery/UploadZone';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useAutosaveField } from '@/hooks/useAutosaveField';
@@ -22,6 +24,7 @@ type Props = {
         company: string;
         pre_selected_niche_id: number | null;
         pre_selected_category_id: number | null;
+        has_logo: boolean;
     };
     session: { status: 'in_progress' | 'submitted'; current_phase: string };
     phase: string;
@@ -33,6 +36,8 @@ type Props = {
     serviceCatalog: CatalogService[] | null;
     selectedServices: SelectedServiceRecord[] | null;
     showPricesToBo: boolean;
+    uploads: UploadRecord[] | null;
+    uploadQuota: { used: number; limit: number } | null;
 };
 
 export default function DiscoveryShow({
@@ -47,6 +52,8 @@ export default function DiscoveryShow({
     serviceCatalog,
     selectedServices,
     showPricesToBo,
+    uploads,
+    uploadQuota,
 }: Props) {
     const locale = (language === 'bg' ? 'bg' : 'en') as Locale;
     const t = useTranslation(locale);
@@ -60,6 +67,7 @@ export default function DiscoveryShow({
     const isSubmitted = session.status === 'submitted';
     const isPhase1 = phase === 'phase_1';
     const isPhase2 = phase === 'phase_2';
+    const isPhase3 = phase === 'phase_3';
 
     const initialNote = typeof answers.notes === 'string' ? answers.notes : '';
     const { value, setValue, saveState } = useAutosaveField(phase, 'notes', initialNote);
@@ -138,6 +146,14 @@ export default function DiscoveryShow({
                             serviceCatalog={serviceCatalog ?? []}
                             initialSelectedServices={selectedServices ?? []}
                             showPricesToBo={showPricesToBo}
+                        />
+                    ) : isPhase3 ? (
+                        <Phase3Branding
+                            t={t}
+                            answers={answers}
+                            hasLogo={businessOwner.has_logo}
+                            initialUploads={uploads ?? []}
+                            initialQuota={uploadQuota ?? { used: 0, limit: 200 * 1024 * 1024 }}
                         />
                     ) : (
                         <>

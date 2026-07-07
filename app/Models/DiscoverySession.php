@@ -46,4 +46,9 @@ class DiscoverySession extends Model
     {
         return $this->hasMany(SelectedService::class);
     }
+
+    public function uploads(): HasMany
+    {
+        return $this->hasMany(Upload::class);
+    }
 }

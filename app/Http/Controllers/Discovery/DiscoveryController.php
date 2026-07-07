@@ -16,6 +16,7 @@ use App\Models\Service;
 use App\Models\Setting;
 use App\Models\TaxonomyCategory;
 use App\Models\TaxonomyNiche;
+use App\Models\Upload;
 use App\Support\LanguageResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -101,12 +102,27 @@ class DiscoveryController extends Controller
                 ->values();
         }
 
+        $uploads = null;
+        $uploadQuota = null;
+        if ($targetPhase === DiscoveryPhase::Phase3) {
+            $uploads = Upload::where('business_owner_id', $businessOwner->id)
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn (Upload $upload) => $upload->toDiscoveryArray())
+                ->values();
+            $uploadQuota = [
+                'used' => (int) Upload::where('business_owner_id', $businessOwner->id)->sum('size'),
+                'limit' => 200 * 1024 * 1024,
+            ];
+        }
+
         return Inertia::render('Discovery/Show', [
             'businessOwner' => [
                 'name' => $businessOwner->name,
                 'company' => $businessOwner->company,
                 'pre_selected_niche_id' => $businessOwner->pre_selected_niche_id,
                 'pre_selected_category_id' => $businessOwner->preSelectedNiche?->taxonomy_category_id,
+                'has_logo' => $businessOwner->logo_path !== null,
             ],
             'taxonomyCategories' => $taxonomyCategories,
             'session' => [
@@ -125,6 +141,8 @@ class DiscoveryController extends Controller
             'serviceCatalog' => $serviceCatalog,
             'selectedServices' => $selectedServices,
             'showPricesToBo' => $showPricesToBo,
+            'uploads' => $uploads,
+            'uploadQuota' => $uploadQuota,
         ]);
     }
 

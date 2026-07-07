@@ -9,8 +9,10 @@ use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TaxonomyCategoryController;
 use App\Http\Controllers\Admin\TaxonomyNicheController;
+use App\Http\Controllers\Discovery\BrandingController;
 use App\Http\Controllers\Discovery\DiscoveryController;
 use App\Http\Controllers\Discovery\SelectedServiceController;
+use App\Http\Controllers\Discovery\UploadController;
 use App\Http\Controllers\Referral\ReferralLandingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -57,6 +59,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     });
 });
 
+Route::middleware(['signed'])->get('/uploads/{upload}/file', [UploadController::class, 'show'])->name('uploads.show');
+
 Route::middleware(['referral'])->group(function () {
     Route::get('/r/{token}', [ReferralLandingController::class, 'show'])->name('referral.show');
     Route::post('/r/{token}/confirm', [ReferralLandingController::class, 'confirm'])->name('referral.confirm');
@@ -71,5 +75,8 @@ Route::middleware(['discovery.access'])->prefix('discovery')->name('discovery.')
     Route::post('/services', [SelectedServiceController::class, 'store'])->name('services.store');
     Route::patch('/services/{selectedService}', [SelectedServiceController::class, 'update'])->name('services.update');
     Route::delete('/services/{selectedService}', [SelectedServiceController::class, 'destroy'])->name('services.destroy');
+    Route::post('/uploads', [UploadController::class, 'store'])->name('uploads.store');
+    Route::delete('/uploads/{upload}', [UploadController::class, 'destroy'])->name('uploads.destroy');
+    Route::get('/branding/logo-colors', [BrandingController::class, 'logoColors'])->name('branding.logo-colors');
     Route::get('/{phase?}', [DiscoveryController::class, 'show'])->name('show');
 });

@@ -9,7 +9,8 @@
         "startDiscovery": "Start the discovery",
         "resumeDiscovery": "Continue the discovery",
         "review": "Review",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "add": "Add"
     },
     "greeting": {
         "confirmTitle": "Confirm your business",
@@ -98,6 +99,48 @@
         "referenceLinksLabel": "Reference links",
         "referenceLinkPlaceholder": "https://…",
         "referenceLinksHint": "Sites or apps whose functionality you like — for inspiration only, never shared back as a recommendation."
+    },
+    "phase3": {
+        "styleHeading": "Which styles feel right for your brand?",
+        "styleChips": {
+            "modern": "Modern",
+            "minimal": "Minimal",
+            "classic": "Classic / Elegant",
+            "bold": "Bold / Vibrant",
+            "warm": "Warm / Friendly",
+            "luxury": "Luxury",
+            "playful": "Playful",
+            "industrial": "Industrial",
+            "natural": "Natural / Organic"
+        },
+        "aiSuggestionsCta": "✨ Get AI suggestions",
+        "aiSuggestionsComingSoon": "Coming soon — AI suggestions land in a later session.",
+        "colorHeading": "Color preferences",
+        "palette": {
+            "ocean": "Ocean",
+            "sunset": "Sunset",
+            "forest": "Forest",
+            "monochrome": "Monochrome",
+            "earth": "Earth",
+            "berry": "Berry"
+        },
+        "customColorLabel": "Pick a custom color",
+        "clearCustomColor": "Clear custom color",
+        "useLogoColorsCta": "Use my logo colors",
+        "useLogoColorsLoading": "Extracting colors…",
+        "useLogoColorsNoLogo": "No logo on file yet — ask your admin contact to add one.",
+        "useLogoColorsError": "Couldn't extract colors from your logo.",
+        "uploadsHeading": "Upload your logo, images or documents",
+        "dropLabel": "Drag files here",
+        "browseLabel": "or browse to upload",
+        "quotaLabel": "{used} of {limit} used",
+        "removeUpload": "Remove",
+        "uploadTooLarge": "{name} is larger than 15MB and wasn't uploaded.",
+        "uploadFailed": "{name} couldn't be uploaded.",
+        "referenceLinksHeading": "Reference links",
+        "referenceLinksSubheading": "Websites or social pages whose look, layout or functionality you like.",
+        "referenceLinkPlaceholder": "https://…",
+        "referenceLinkNotePlaceholder": "What do you like about it?"
     },
     "submit": {
         "cta": "Submit my specification",

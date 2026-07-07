@@ -9,7 +9,8 @@
         "startDiscovery": "Започнете интервюто",
         "resumeDiscovery": "Продължете интервюто",
         "review": "Преглед",
-        "cancel": "Отказ"
+        "cancel": "Отказ",
+        "add": "Добави"
     },
     "greeting": {
         "confirmTitle": "Потвърдете фирмата си",
@@ -98,6 +99,48 @@
         "referenceLinksLabel": "Референтни връзки",
         "referenceLinkPlaceholder": "https://…",
         "referenceLinksHint": "Сайтове или приложения, чиято функционалност харесвате — само за вдъхновение, никога не се споделя обратно като препоръка."
+    },
+    "phase3": {
+        "styleHeading": "Кои стилове пасват на вашия бранд?",
+        "styleChips": {
+            "modern": "Модерен",
+            "minimal": "Минималистичен",
+            "classic": "Класически / Елегантен",
+            "bold": "Смел / Ярък",
+            "warm": "Топъл / Приятелски",
+            "luxury": "Луксозен",
+            "playful": "Игрив",
+            "industrial": "Индустриален",
+            "natural": "Природен / Органичен"
+        },
+        "aiSuggestionsCta": "✨ Получи AI препоръки",
+        "aiSuggestionsComingSoon": "Очаквайте скоро — AI препоръките се добавят в по-късна сесия.",
+        "colorHeading": "Цветови предпочитания",
+        "palette": {
+            "ocean": "Океан",
+            "sunset": "Залез",
+            "forest": "Гора",
+            "monochrome": "Монохром",
+            "earth": "Земни тонове",
+            "berry": "Плодове"
+        },
+        "customColorLabel": "Изберете свой цвят",
+        "clearCustomColor": "Изчисти избрания цвят",
+        "useLogoColorsCta": "Използвай цветовете на моето лого",
+        "useLogoColorsLoading": "Извличане на цветове…",
+        "useLogoColorsNoLogo": "Все още няма качено лого — свържете се с администратора, за да го добави.",
+        "useLogoColorsError": "Неуспешно извличане на цветове от логото.",
+        "uploadsHeading": "Качете лого, изображения или документи",
+        "dropLabel": "Пуснете файлове тук",
+        "browseLabel": "или разгледайте, за да качите",
+        "quotaLabel": "{used} от {limit} използвани",
+        "removeUpload": "Премахни",
+        "uploadTooLarge": "{name} е по-голям от 15MB и не беше качен.",
+        "uploadFailed": "{name} не можа да бъде качен.",
+        "referenceLinksHeading": "Референтни връзки",
+        "referenceLinksSubheading": "Уебсайтове или страници в социални мрежи, чийто изглед, оформление или функционалност харесвате.",
+        "referenceLinkPlaceholder": "https://…",
+        "referenceLinkNotePlaceholder": "Какво харесвате в него?"
     },
     "submit": {
         "cta": "Изпрати моята спецификация",
