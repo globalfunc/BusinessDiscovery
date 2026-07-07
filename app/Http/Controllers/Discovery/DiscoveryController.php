@@ -11,7 +11,10 @@ use App\Models\ActivityEvent;
 use App\Models\BusinessOwner;
 use App\Models\DiscoverySession;
 use App\Models\ReferralToken;
+use App\Models\TaxonomyCategory;
+use App\Models\TaxonomyNiche;
 use App\Support\LanguageResolver;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
@@ -59,11 +62,30 @@ class DiscoveryController extends Controller
             ->get()
             ->mapWithKeys(fn ($answer) => [$answer->field_key => $answer->value]);
 
+        $taxonomyCategories = $targetPhase === DiscoveryPhase::Phase1
+            ? TaxonomyCategory::query()
+                ->where('hidden', false)
+                ->orderBy('sort')
+                ->with(['niches' => fn ($query) => $query->where('hidden', false)->orderBy('sort')])
+                ->get()
+                ->map(fn (TaxonomyCategory $category) => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'niches' => $category->niches->map(fn (TaxonomyNiche $niche) => [
+                        'id' => $niche->id,
+                        'name' => $niche->name,
+                    ]),
+                ])
+            : null;
+
         return Inertia::render('Discovery/Show', [
             'businessOwner' => [
                 'name' => $businessOwner->name,
                 'company' => $businessOwner->company,
+                'pre_selected_niche_id' => $businessOwner->pre_selected_niche_id,
+                'pre_selected_category_id' => $businessOwner->preSelectedNiche?->taxonomy_category_id,
             ],
+            'taxonomyCategories' => $taxonomyCategories,
             'session' => [
                 'status' => $session->status,
                 'current_phase' => $session->current_phase->value,
@@ -80,7 +102,7 @@ class DiscoveryController extends Controller
         ]);
     }
 
-    public function updateAnswer(Request $request): \Illuminate\Http\JsonResponse
+    public function updateAnswer(Request $request): JsonResponse
     {
         /** @var BusinessOwner $businessOwner */
         $businessOwner = $request->attributes->get('businessOwner');
@@ -97,6 +119,10 @@ class DiscoveryController extends Controller
             ['phase' => $data['phase'], 'field_key' => $data['field_key']],
             ['value' => $data['value'] ?? null],
         );
+
+        if ($data['phase'] === DiscoveryPhase::Phase1->value && $data['field_key'] === 'custom_niche_text') {
+            $this->flagCustomNicheForAdminReview($businessOwner, $session, $data['value'] ?? null);
+        }
 
         return response()->json([
             'saved' => true,
@@ -169,6 +195,32 @@ class DiscoveryController extends Controller
         }
 
         return redirect()->back();
+    }
+
+    /**
+     * "Other / not listed" niches aren't in the catalog, so flag them for the
+     * admin to review and possibly turn into a real taxonomy niche later.
+     * Fires once per session — later edits to the text don't re-flag.
+     */
+    private function flagCustomNicheForAdminReview(BusinessOwner $businessOwner, DiscoverySession $session, mixed $value): void
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return;
+        }
+
+        $alreadyFlagged = ActivityEvent::where('business_owner_id', $businessOwner->id)
+            ->where('type', 'custom_niche_flagged')
+            ->exists();
+
+        if ($alreadyFlagged) {
+            return;
+        }
+
+        ActivityEvent::create([
+            'business_owner_id' => $businessOwner->id,
+            'type' => 'custom_niche_flagged',
+            'payload' => ['discovery_session_id' => $session->id, 'custom_niche_text' => $value],
+        ]);
     }
 
     private function resolveAndPersistLanguage(Request $request, BusinessOwner $businessOwner): Language

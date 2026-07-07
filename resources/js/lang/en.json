@@ -14,7 +14,8 @@
         "confirmTitle": "Confirm your business",
         "confirmBody": "Before we continue, please confirm this is your business.",
         "confirmCta": "Yes, this is my business",
-        "greetingFallback": "Hi {name}! We've prepared a short interactive interview to understand {company} and shape the right online solution for your business. It takes 10–15 minutes and you can pause anytime."
+        "title": "Hi {name}!",
+        "body": "We've prepared a short interactive interview to understand {company} and shape the right online solution for your business. It takes 10–15 minutes and you can pause anytime."
     },
     "phases": {
         "phase_0": {
@@ -57,6 +58,21 @@
             "helper": "We'll compile everything into a specification for you to review.",
             "placeholder": "The real specification preview lands in session S3.5."
         }
+    },
+    "phase1": {
+        "profileHeading": "Your details",
+        "nameLabel": "Your name",
+        "companyLabel": "Company name",
+        "websiteLabel": "Website or social link (optional)",
+        "websitePlaceholder": "https://…",
+        "categoryHeading": "What kind of business do you run?",
+        "searchPlaceholder": "Search categories or niches…",
+        "changeCategory": "← Change category",
+        "otherTitle": "Other / not listed",
+        "otherDescription": "Describe your business in a few words",
+        "otherPlaceholder": "e.g. mobile pet grooming service",
+        "otherHint": "We'll flag this for a quick manual review.",
+        "requiredHint": "Pick a category and niche (or describe your own) to continue."
     },
     "submit": {
         "cta": "Submit my specification",

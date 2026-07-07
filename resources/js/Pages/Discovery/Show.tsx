@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { BottomActionBar } from '@/components/discovery/BottomActionBar';
+import { Phase1BusinessProfile } from '@/components/discovery/phases/Phase1BusinessProfile';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useAutosaveField } from '@/hooks/useAutosaveField';
@@ -9,27 +10,46 @@ import { useTranslation, type Locale } from '@/lib/i18n';
 import DiscoveryLayout from '@/Layouts/DiscoveryLayout';
 
 type PhaseItem = { key: string; label: string };
+type NicheOption = { id: number; name: { en: string; bg: string } };
+type CategoryOption = { id: number; name: { en: string; bg: string }; niches: NicheOption[] };
 
 type Props = {
-    businessOwner: { name: string; company: string };
+    businessOwner: {
+        name: string;
+        company: string;
+        pre_selected_niche_id: number | null;
+        pre_selected_category_id: number | null;
+    };
     session: { status: 'in_progress' | 'submitted'; current_phase: string };
     phase: string;
     phases: PhaseItem[];
     visitedPhaseKeys: string[];
     answers: Record<string, unknown>;
     language: string;
+    taxonomyCategories: CategoryOption[] | null;
 };
 
-export default function DiscoveryShow({ businessOwner, session, phase, phases, visitedPhaseKeys, answers, language }: Props) {
+export default function DiscoveryShow({
+    businessOwner,
+    session,
+    phase,
+    phases,
+    visitedPhaseKeys,
+    answers,
+    language,
+    taxonomyCategories,
+}: Props) {
     const locale = (language === 'bg' ? 'bg' : 'en') as Locale;
     const t = useTranslation(locale);
     const [submitting, setSubmitting] = useState(false);
+    const [phase1Valid, setPhase1Valid] = useState(true);
 
     const phaseIndex = phases.findIndex((p) => p.key === phase);
     const previousPhase = phaseIndex > 0 ? phases[phaseIndex - 1] : null;
     const nextPhase = phaseIndex < phases.length - 1 ? phases[phaseIndex + 1] : null;
     const isReview = phase === 'review';
     const isSubmitted = session.status === 'submitted';
+    const isPhase1 = phase === 'phase_1';
 
     const initialNote = typeof answers.notes === 'string' ? answers.notes : '';
     const { value, setValue, saveState } = useAutosaveField(phase, 'notes', initialNote);
@@ -67,7 +87,7 @@ export default function DiscoveryShow({ businessOwner, session, phase, phases, v
                         savedLabel={t('common.saved')}
                         saveState={saveState}
                         backDisabled={!previousPhase}
-                        continueDisabled={submitting}
+                        continueDisabled={submitting || (isPhase1 && !phase1Valid)}
                     />
                 )
             }
@@ -92,24 +112,37 @@ export default function DiscoveryShow({ businessOwner, session, phase, phases, v
                         <p className="mt-1 font-body text-sm text-text-muted">{t(`phases.${phase}.helper`)}</p>
                     </div>
 
-                    <div className="rounded-md border border-dashed border-line-strong bg-surface-2 p-4 font-body text-sm text-text-faint">
-                        {t(`phases.${phase}.placeholder`)}
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor="notes" className="font-ui text-xs font-medium text-text-muted">
-                            Notes
-                        </label>
-                        <Textarea
-                            id="notes"
-                            value={value}
-                            onChange={(e) => setValue(e.target.value)}
-                            placeholder={t(`phases.${phase}.placeholder`)}
-                            rows={4}
+                    {isPhase1 ? (
+                        <Phase1BusinessProfile
+                            locale={locale}
+                            t={t}
+                            businessOwner={businessOwner}
+                            answers={answers}
+                            taxonomyCategories={taxonomyCategories ?? []}
+                            onValidityChange={setPhase1Valid}
                         />
-                    </div>
+                    ) : (
+                        <>
+                            <div className="rounded-md border border-dashed border-line-strong bg-surface-2 p-4 font-body text-sm text-text-faint">
+                                {t(`phases.${phase}.placeholder`)}
+                            </div>
 
-                    {!isReview && (
+                            <div className="flex flex-col gap-1.5">
+                                <label htmlFor="notes" className="font-ui text-xs font-medium text-text-muted">
+                                    Notes
+                                </label>
+                                <Textarea
+                                    id="notes"
+                                    value={value}
+                                    onChange={(e) => setValue(e.target.value)}
+                                    placeholder={t(`phases.${phase}.placeholder`)}
+                                    rows={4}
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    {!isReview && !isPhase1 && (
                         <div>
                             <Button variant="ghost" size="sm" onClick={goContinue} disabled={submitting}>
                                 {t('common.skip')}

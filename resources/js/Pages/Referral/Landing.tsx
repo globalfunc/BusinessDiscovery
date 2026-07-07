@@ -88,17 +88,23 @@ export default function ReferralLanding({
                         </>
                     ) : (
                         <>
-                            <CardHeader>
+                            <CardHeader className="items-center text-center">
+                                {businessOwner.logo_path && (
+                                    <img
+                                        src={businessOwner.logo_path}
+                                        alt={businessOwner.company}
+                                        className="mb-2 h-16 w-16 rounded-lg border border-line-strong object-cover"
+                                    />
+                                )}
                                 <p className="eyebrow text-accent">BusinessDiscovery</p>
                                 <CardTitle className="font-display text-2xl font-semibold">
-                                    {businessOwner.greeting_override ||
-                                        t('greeting.greetingFallback', {
-                                            name: businessOwner.name,
-                                            company: businessOwner.company,
-                                        })}
+                                    {businessOwner.greeting_override || t('greeting.title', { name: businessOwner.name })}
                                 </CardTitle>
+                                {!businessOwner.greeting_override && (
+                                    <CardDescription>{t('greeting.body', { company: businessOwner.company })}</CardDescription>
+                                )}
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="flex justify-center">
                                 <Button asChild>
                                     <a href={route('discovery.show')}>
                                         {hasStartedDiscovery ? t('common.resumeDiscovery') : t('common.startDiscovery')}

@@ -6,8 +6,8 @@ import type { SaveState } from '@/components/discovery/BottomActionBar';
  * Debounced per-field autosave: instant local state update, background PATCH
  * to the discovery_answers upsert endpoint after a pause in typing.
  */
-export function useAutosaveField(phase: string, fieldKey: string, initialValue: string) {
-    const [value, setValue] = useState(initialValue);
+export function useAutosaveField<T>(phase: string, fieldKey: string, initialValue: T) {
+    const [value, setValue] = useState<T>(initialValue);
     const [saveState, setSaveState] = useState<SaveState>('idle');
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const savedResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
