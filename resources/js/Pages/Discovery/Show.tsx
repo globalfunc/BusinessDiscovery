@@ -5,6 +5,8 @@ import { BottomActionBar } from '@/components/discovery/BottomActionBar';
 import { Phase1BusinessProfile } from '@/components/discovery/phases/Phase1BusinessProfile';
 import { Phase2ServicesSelection } from '@/components/discovery/phases/Phase2ServicesSelection';
 import { Phase3Branding } from '@/components/discovery/phases/Phase3Branding';
+import { Phase4ContentSocial } from '@/components/discovery/phases/Phase4ContentSocial';
+import { Phase5GrowthOperations } from '@/components/discovery/phases/Phase5GrowthOperations';
 import type { CatalogService } from '@/components/discovery/CatalogServiceCard';
 import type { SelectedServiceRecord } from '@/components/discovery/SelectedServiceCard';
 import type { UploadRecord } from '@/components/discovery/UploadZone';
@@ -68,6 +70,8 @@ export default function DiscoveryShow({
     const isPhase1 = phase === 'phase_1';
     const isPhase2 = phase === 'phase_2';
     const isPhase3 = phase === 'phase_3';
+    const isPhase4 = phase === 'phase_4';
+    const isPhase5 = phase === 'phase_5';
 
     const initialNote = typeof answers.notes === 'string' ? answers.notes : '';
     const { value, setValue, saveState } = useAutosaveField(phase, 'notes', initialNote);
@@ -155,6 +159,10 @@ export default function DiscoveryShow({
                             initialUploads={uploads ?? []}
                             initialQuota={uploadQuota ?? { used: 0, limit: 200 * 1024 * 1024 }}
                         />
+                    ) : isPhase4 ? (
+                        <Phase4ContentSocial t={t} answers={answers} />
+                    ) : isPhase5 ? (
+                        <Phase5GrowthOperations t={t} answers={answers} />
                     ) : (
                         <>
                             <div className="rounded-md border border-dashed border-line-strong bg-surface-2 p-4 font-body text-sm text-text-faint">

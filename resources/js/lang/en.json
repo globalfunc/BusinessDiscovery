@@ -142,6 +142,103 @@
         "referenceLinkPlaceholder": "https://…",
         "referenceLinkNotePlaceholder": "What do you like about it?"
     },
+    "phase4": {
+        "aiSuggestionsCta": "✨ Get AI suggestions",
+        "aiSuggestionsComingSoon": "Coming soon — AI suggestions land in a later session.",
+        "contentHeading": "What content do you need?",
+        "contentNeeds": {
+            "copywriting": "Copywriting for the site",
+            "photo_video": "Photo / video needs",
+            "menu_pricelist": "Menu or price-list digitization",
+            "multilingual": "Multilingual content (BG/EN)",
+            "blog_news": "Blog / news updates"
+        },
+        "socialHeading": "Social presence",
+        "socialPlatformsLabel": "Which platforms do you use or want?",
+        "platforms": {
+            "facebook": "Facebook",
+            "instagram": "Instagram",
+            "tiktok": "TikTok",
+            "linkedin": "LinkedIn",
+            "youtube": "YouTube",
+            "google_business": "Google Business Profile"
+        },
+        "otherPlatformsLabel": "Other platforms",
+        "otherPlatformsPlaceholder": "Add a platform and press Enter",
+        "cadenceLabel": "How often would you like to post?",
+        "cadence": {
+            "none": "Not posting currently",
+            "weekly": "Weekly",
+            "few_times_month": "A few times a month",
+            "monthly": "Monthly",
+            "unsure": "Not sure yet"
+        },
+        "contentAssistLabel": "Interested in content-generation assistance?",
+        "interest": {
+            "interested": "Yes, interested",
+            "maybe": "Maybe / tell me more",
+            "not_interested": "Not interested"
+        }
+    },
+    "phase5": {
+        "modules": {
+            "notifications": {
+                "title": "Notifications",
+                "subtitle": "Reminders, confirmations and follow-ups.",
+                "aiSuggestionsCta": "✨ Get AI suggestions",
+                "aiSuggestionsComingSoon": "Coming soon — AI suggestions land in a later session.",
+                "options": {
+                    "in_app": "In-app notifications",
+                    "email": "Email notifications",
+                    "sms": "SMS notifications",
+                    "messaging_app": "Messaging-app notifications"
+                }
+            },
+            "marketing": {
+                "title": "Marketing & retention",
+                "subtitle": "Stay in touch and bring customers back.",
+                "aiSuggestionsCta": "✨ Get AI suggestions",
+                "aiSuggestionsComingSoon": "Coming soon — AI suggestions land in a later session.",
+                "options": {
+                    "email_campaigns": "Email campaigns",
+                    "newsletters": "Newsletters",
+                    "bulk_discounts": "Bulk / loyalty discounts",
+                    "gift_vouchers": "Gift vouchers",
+                    "review_collection": "Review collection & reputation prompts",
+                    "referral_rewards": "Referral rewards",
+                    "winback_campaigns": "Win-back campaigns"
+                }
+            },
+            "leadgen": {
+                "title": "Lead generation",
+                "subtitle": "Where do you believe new customers come from?",
+                "aiSuggestionsCta": "✨ Get AI suggestions",
+                "aiSuggestionsComingSoon": "Coming soon — AI suggestions land in a later session.",
+                "options": {
+                    "map_local_search": "Map / local-search visibility",
+                    "social_groups": "Social groups / communities",
+                    "partnerships": "Partnerships",
+                    "directories": "Directories"
+                },
+                "managedServiceLabel": "Interested in a managed lead-generation service?"
+            },
+            "admin_ops": {
+                "title": "Admin & operations tooling",
+                "subtitle": "Run the day-to-day more smoothly.",
+                "aiSuggestionsCta": "✨ Get AI suggestions",
+                "aiSuggestionsComingSoon": "Coming soon — AI suggestions land in a later session.",
+                "options": {
+                    "staff_scheduling": "Staff scheduling",
+                    "crm_lite": "Customer database (CRM-lite)",
+                    "invoicing_quotes": "Digital invoices & quotes",
+                    "document_assistant": "Document / knowledge assistant",
+                    "chatbot_assistant": "Chatbot / assistant for customer questions",
+                    "dashboards": "Internal dashboards"
+                }
+            }
+        },
+        "enableToggleLabel": "Include this module"
+    },
     "submit": {
         "cta": "Submit my specification",
         "confirmTitle": "Submit your specification?",

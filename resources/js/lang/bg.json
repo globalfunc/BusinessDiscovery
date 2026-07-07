@@ -142,6 +142,103 @@
         "referenceLinkPlaceholder": "https://…",
         "referenceLinkNotePlaceholder": "Какво харесвате в него?"
     },
+    "phase4": {
+        "aiSuggestionsCta": "✨ Получи AI препоръки",
+        "aiSuggestionsComingSoon": "Очаквайте скоро — AI препоръките се добавят в по-късна сесия.",
+        "contentHeading": "От какво съдържание имате нужда?",
+        "contentNeeds": {
+            "copywriting": "Текстово съдържание за сайта",
+            "photo_video": "Нужди от снимки / видео",
+            "menu_pricelist": "Дигитализация на меню или ценоразпис",
+            "multilingual": "Многоезично съдържание (БГ/EN)",
+            "blog_news": "Блог / новини"
+        },
+        "socialHeading": "Социално присъствие",
+        "socialPlatformsLabel": "Кои платформи използвате или искате да използвате?",
+        "platforms": {
+            "facebook": "Facebook",
+            "instagram": "Instagram",
+            "tiktok": "TikTok",
+            "linkedin": "LinkedIn",
+            "youtube": "YouTube",
+            "google_business": "Google Business Profile"
+        },
+        "otherPlatformsLabel": "Други платформи",
+        "otherPlatformsPlaceholder": "Добавете платформа и натиснете Enter",
+        "cadenceLabel": "Колко често искате да публикувате?",
+        "cadence": {
+            "none": "В момента не публикувам",
+            "weekly": "Седмично",
+            "few_times_month": "Няколко пъти месечно",
+            "monthly": "Месечно",
+            "unsure": "Все още не съм сигурен/а"
+        },
+        "contentAssistLabel": "Интересува ли ви помощ при генериране на съдържание?",
+        "interest": {
+            "interested": "Да, интересува ме",
+            "maybe": "Може би / разкажете ми повече",
+            "not_interested": "Не се интересувам"
+        }
+    },
+    "phase5": {
+        "modules": {
+            "notifications": {
+                "title": "Известия",
+                "subtitle": "Напомняния, потвърждения и последващи съобщения.",
+                "aiSuggestionsCta": "✨ Получи AI препоръки",
+                "aiSuggestionsComingSoon": "Очаквайте скоро — AI препоръките се добавят в по-късна сесия.",
+                "options": {
+                    "in_app": "Известия в приложението",
+                    "email": "Известия по имейл",
+                    "sms": "SMS известия",
+                    "messaging_app": "Известия през приложение за съобщения"
+                }
+            },
+            "marketing": {
+                "title": "Маркетинг и задържане",
+                "subtitle": "Поддържайте връзка и връщайте клиентите обратно.",
+                "aiSuggestionsCta": "✨ Получи AI препоръки",
+                "aiSuggestionsComingSoon": "Очаквайте скоро — AI препоръките се добавят в по-късна сесия.",
+                "options": {
+                    "email_campaigns": "Имейл кампании",
+                    "newsletters": "Бюлетини",
+                    "bulk_discounts": "Групови / лоялни отстъпки",
+                    "gift_vouchers": "Подаръчни ваучери",
+                    "review_collection": "Събиране на ревюта и репутация",
+                    "referral_rewards": "Награди за препоръки",
+                    "winback_campaigns": "Кампании за връщане на клиенти"
+                }
+            },
+            "leadgen": {
+                "title": "Лийд генерация",
+                "subtitle": "Откъде смятате, че идват новите ви клиенти?",
+                "aiSuggestionsCta": "✨ Получи AI препоръки",
+                "aiSuggestionsComingSoon": "Очаквайте скоро — AI препоръките се добавят в по-късна сесия.",
+                "options": {
+                    "map_local_search": "Видимост в карти / локално търсене",
+                    "social_groups": "Групи / общности в социални мрежи",
+                    "partnerships": "Партньорства",
+                    "directories": "Указатели / директории"
+                },
+                "managedServiceLabel": "Интересувате ли се от управлявана услуга за лийд генерация?"
+            },
+            "admin_ops": {
+                "title": "Администрация и операции",
+                "subtitle": "По-гладко ежедневно управление.",
+                "aiSuggestionsCta": "✨ Получи AI препоръки",
+                "aiSuggestionsComingSoon": "Очаквайте скоро — AI препоръките се добавят в по-късна сесия.",
+                "options": {
+                    "staff_scheduling": "Планиране на персонал",
+                    "crm_lite": "База данни с клиенти (CRM-lite)",
+                    "invoicing_quotes": "Дигитални фактури и оферти",
+                    "document_assistant": "Помощник за документи / знания",
+                    "chatbot_assistant": "Чатбот / помощник за въпроси от клиенти",
+                    "dashboards": "Вътрешни табла"
+                }
+            }
+        },
+        "enableToggleLabel": "Включи този модул"
+    },
     "submit": {
         "cta": "Изпрати моята спецификация",
         "confirmTitle": "Да изпратим ли спецификацията?",
