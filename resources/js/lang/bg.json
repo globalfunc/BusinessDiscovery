@@ -8,7 +8,8 @@
         "submit": "Изпрати",
         "startDiscovery": "Започнете интервюто",
         "resumeDiscovery": "Продължете интервюто",
-        "review": "Преглед"
+        "review": "Преглед",
+        "cancel": "Отказ"
     },
     "greeting": {
         "confirmTitle": "Потвърдете фирмата си",
@@ -73,6 +74,30 @@
         "otherPlaceholder": "напр. мобилен грууминг за домашни любимци",
         "otherHint": "Ще отбележим това за бърз ръчен преглед.",
         "requiredHint": "Изберете категория и ниша (или опишете своята), за да продължите."
+    },
+    "phase2": {
+        "catalogHeading": "Изберете услугите, които ви интересуват",
+        "recommendedBadge": "Препоръчано за вашата ниша",
+        "featuresToggle": "Функции",
+        "add": "+ Добави",
+        "added": "✓ Добавено",
+        "aiSuggestionsCta": "✨ Получи AI препоръки",
+        "aiSuggestionsComingSoon": "Очаквайте скоро — AI препоръките се добавят в по-късна сесия.",
+        "selectedHeading": "Избраните от вас услуги",
+        "customBadge": "Персонализирано",
+        "priorityToggle": "Отбележи като приоритет",
+        "remove": "Премахни",
+        "featurePlaceholder": "Добавете функция и натиснете Enter",
+        "notePlaceholder": "Има ли нещо, което искате да добавите или промените?",
+        "addOwnCta": "+ Добавете своя услуга",
+        "addOwnHeading": "Добавете своя услуга",
+        "addOwnSubmit": "Добави услуга",
+        "nameLabel": "Име на услугата",
+        "descriptionLabel": "Описание",
+        "featureListLabel": "Желани функции",
+        "referenceLinksLabel": "Референтни връзки",
+        "referenceLinkPlaceholder": "https://…",
+        "referenceLinksHint": "Сайтове или приложения, чиято функционалност харесвате — само за вдъхновение, никога не се споделя обратно като препоръка."
     },
     "submit": {
         "cta": "Изпрати моята спецификация",

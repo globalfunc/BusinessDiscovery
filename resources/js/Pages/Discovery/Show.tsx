@@ -3,6 +3,9 @@ import { useState } from 'react';
 
 import { BottomActionBar } from '@/components/discovery/BottomActionBar';
 import { Phase1BusinessProfile } from '@/components/discovery/phases/Phase1BusinessProfile';
+import { Phase2ServicesSelection } from '@/components/discovery/phases/Phase2ServicesSelection';
+import type { CatalogService } from '@/components/discovery/CatalogServiceCard';
+import type { SelectedServiceRecord } from '@/components/discovery/SelectedServiceCard';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useAutosaveField } from '@/hooks/useAutosaveField';
@@ -27,6 +30,9 @@ type Props = {
     answers: Record<string, unknown>;
     language: string;
     taxonomyCategories: CategoryOption[] | null;
+    serviceCatalog: CatalogService[] | null;
+    selectedServices: SelectedServiceRecord[] | null;
+    showPricesToBo: boolean;
 };
 
 export default function DiscoveryShow({
@@ -38,6 +44,9 @@ export default function DiscoveryShow({
     answers,
     language,
     taxonomyCategories,
+    serviceCatalog,
+    selectedServices,
+    showPricesToBo,
 }: Props) {
     const locale = (language === 'bg' ? 'bg' : 'en') as Locale;
     const t = useTranslation(locale);
@@ -50,6 +59,7 @@ export default function DiscoveryShow({
     const isReview = phase === 'review';
     const isSubmitted = session.status === 'submitted';
     const isPhase1 = phase === 'phase_1';
+    const isPhase2 = phase === 'phase_2';
 
     const initialNote = typeof answers.notes === 'string' ? answers.notes : '';
     const { value, setValue, saveState } = useAutosaveField(phase, 'notes', initialNote);
@@ -121,6 +131,14 @@ export default function DiscoveryShow({
                             taxonomyCategories={taxonomyCategories ?? []}
                             onValidityChange={setPhase1Valid}
                         />
+                    ) : isPhase2 ? (
+                        <Phase2ServicesSelection
+                            locale={locale}
+                            t={t}
+                            serviceCatalog={serviceCatalog ?? []}
+                            initialSelectedServices={selectedServices ?? []}
+                            showPricesToBo={showPricesToBo}
+                        />
                     ) : (
                         <>
                             <div className="rounded-md border border-dashed border-line-strong bg-surface-2 p-4 font-body text-sm text-text-faint">
@@ -142,7 +160,7 @@ export default function DiscoveryShow({
                         </>
                     )}
 
-                    {!isReview && !isPhase1 && (
+                    {!isReview && !isPhase1 && !isPhase2 && (
                         <div>
                             <Button variant="ghost" size="sm" onClick={goContinue} disabled={submitting}>
                                 {t('common.skip')}

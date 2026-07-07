@@ -11,12 +11,16 @@ use App\Models\ActivityEvent;
 use App\Models\BusinessOwner;
 use App\Models\DiscoverySession;
 use App\Models\ReferralToken;
+use App\Models\SelectedService;
+use App\Models\Service;
+use App\Models\Setting;
 use App\Models\TaxonomyCategory;
 use App\Models\TaxonomyNiche;
 use App\Support\LanguageResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cookie;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -78,6 +82,25 @@ class DiscoveryController extends Controller
                 ])
             : null;
 
+        $serviceCatalog = null;
+        $selectedServices = null;
+        $showPricesToBo = false;
+
+        if ($targetPhase === DiscoveryPhase::Phase2) {
+            $showPricesToBo = (bool) (Setting::query()->where('key', 'show_prices_to_bo')->first()?->value['enabled'] ?? false);
+
+            $nicheId = $session->answers()
+                ->where('phase', DiscoveryPhase::Phase1->value)
+                ->where('field_key', 'niche_id')
+                ->value('value');
+            $nicheId = is_int($nicheId) ? $nicheId : null;
+
+            $serviceCatalog = $this->gatedServiceCatalog($nicheId);
+            $selectedServices = $session->selectedServices()->orderBy('created_at')->get()
+                ->map(fn (SelectedService $s) => $s->toDiscoveryArray())
+                ->values();
+        }
+
         return Inertia::render('Discovery/Show', [
             'businessOwner' => [
                 'name' => $businessOwner->name,
@@ -99,7 +122,53 @@ class DiscoveryController extends Controller
                 ->map(fn (DiscoveryPhase $p) => $p->value),
             'answers' => $answers,
             'language' => $language->value,
+            'serviceCatalog' => $serviceCatalog,
+            'selectedServices' => $selectedServices,
+            'showPricesToBo' => $showPricesToBo,
         ]);
+    }
+
+    /**
+     * Full catalog when no niche is confirmed yet (e.g. "Other" free-text
+     * niche); niche-filtered + recommended-flagged otherwise. Ordering:
+     * recommended-for-niche first, then alphabetical by English name.
+     *
+     * TODO(S3.2): once dcp.suggest_services exists, accepted AI suggestions
+     * become custom selected_service rows — this catalog list itself does
+     * not change shape.
+     */
+    private function gatedServiceCatalog(?int $nicheId): Collection
+    {
+        $services = Service::query()
+            ->where('hidden', false)
+            ->when($nicheId !== null, fn ($query) => $query->with(['niches' => fn ($q) => $q->where('taxonomy_niches.id', $nicheId)]))
+            ->get();
+
+        return $services
+            ->map(function (Service $service) use ($nicheId) {
+                $recommended = false;
+                if ($nicheId !== null) {
+                    $pivotNiche = $service->niches->firstWhere('id', $nicheId);
+                    $recommended = (bool) ($pivotNiche?->pivot->recommended ?? false);
+                }
+
+                return [
+                    'id' => $service->id,
+                    'key' => $service->key,
+                    'name' => $service->name,
+                    'one_liner' => $service->one_liner,
+                    'base_features' => $service->base_features,
+                    'saas_eligible' => $service->saas_eligible,
+                    'price_min' => $service->price_min,
+                    'price_max' => $service->price_max,
+                    'recommended' => $recommended,
+                ];
+            })
+            ->sortBy([
+                fn ($a, $b) => ($b['recommended'] <=> $a['recommended']),
+                fn ($a, $b) => ($a['name']['en'] <=> $b['name']['en']),
+            ])
+            ->values();
     }
 
     public function updateAnswer(Request $request): JsonResponse

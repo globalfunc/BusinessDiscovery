@@ -8,7 +8,8 @@
         "submit": "Submit",
         "startDiscovery": "Start the discovery",
         "resumeDiscovery": "Continue the discovery",
-        "review": "Review"
+        "review": "Review",
+        "cancel": "Cancel"
     },
     "greeting": {
         "confirmTitle": "Confirm your business",
@@ -73,6 +74,30 @@
         "otherPlaceholder": "e.g. mobile pet grooming service",
         "otherHint": "We'll flag this for a quick manual review.",
         "requiredHint": "Pick a category and niche (or describe your own) to continue."
+    },
+    "phase2": {
+        "catalogHeading": "Choose the services you're interested in",
+        "recommendedBadge": "Recommended for your niche",
+        "featuresToggle": "Features",
+        "add": "+ Add",
+        "added": "✓ Added",
+        "aiSuggestionsCta": "✨ Get AI suggestions",
+        "aiSuggestionsComingSoon": "Coming soon — AI suggestions land in a later session.",
+        "selectedHeading": "Your selected services",
+        "customBadge": "Custom",
+        "priorityToggle": "Mark as priority",
+        "remove": "Remove",
+        "featurePlaceholder": "Add a feature and press Enter",
+        "notePlaceholder": "Anything to add or change about this?",
+        "addOwnCta": "+ Add your own service",
+        "addOwnHeading": "Add your own service",
+        "addOwnSubmit": "Add service",
+        "nameLabel": "Service name",
+        "descriptionLabel": "Description",
+        "featureListLabel": "Desired features",
+        "referenceLinksLabel": "Reference links",
+        "referenceLinkPlaceholder": "https://…",
+        "referenceLinksHint": "Sites or apps whose functionality you like — for inspiration only, never shared back as a recommendation."
     },
     "submit": {
         "cta": "Submit my specification",

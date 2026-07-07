@@ -41,4 +41,9 @@ class DiscoverySession extends Model
     {
         return $this->hasMany(DiscoveryAnswer::class);
     }
+
+    public function selectedServices(): HasMany
+    {
+        return $this->hasMany(SelectedService::class);
+    }
 }
