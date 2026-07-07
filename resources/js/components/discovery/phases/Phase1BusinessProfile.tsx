@@ -1,11 +1,14 @@
+import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 import { SelectableCard } from '@/components/discovery/SelectableCard';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAutosaveField } from '@/hooks/useAutosaveField';
 import type { Locale } from '@/lib/i18n';
+import type { DcpState } from '@/Pages/Discovery/Show';
 
 type NicheOption = { id: number; name: { en: string; bg: string } };
 type CategoryOption = { id: number; name: { en: string; bg: string }; niches: NicheOption[] };
@@ -21,15 +24,32 @@ type Props = {
     };
     answers: Record<string, unknown>;
     taxonomyCategories: CategoryOption[];
+    dcp: DcpState;
     onValidityChange: (valid: boolean) => void;
 };
 
-export function Phase1BusinessProfile({ locale, t, businessOwner, answers, taxonomyCategories, onValidityChange }: Props) {
+export function Phase1BusinessProfile({
+    locale,
+    t,
+    businessOwner,
+    answers,
+    taxonomyCategories,
+    dcp,
+    onValidityChange,
+}: Props) {
     const initialName = typeof answers.profile_name === 'string' ? answers.profile_name : businessOwner.name;
     const initialCompany = typeof answers.profile_company === 'string' ? answers.profile_company : businessOwner.company;
     const initialWebsite = typeof answers.profile_website === 'string' ? answers.profile_website : '';
+    // DCP-detected niche (dcp.generate, §3.2): pre-highlighted with a badge,
+    // never auto-selected — one tap to confirm. Only suggested while the BO
+    // hasn't picked a niche yet.
+    const suggestedNicheId = dcp?.detected_niche?.niche_id ?? null;
+    const suggestedCategoryId = dcp?.detected_niche?.category_id ?? null;
+
     const initialCategoryId =
-        'category_id' in answers ? (answers.category_id as number | null) : (businessOwner.pre_selected_category_id ?? null);
+        'category_id' in answers
+            ? (answers.category_id as number | null)
+            : (businessOwner.pre_selected_category_id ?? suggestedCategoryId);
     const initialNicheId =
         'niche_id' in answers ? (answers.niche_id as number | null) : (businessOwner.pre_selected_niche_id ?? null);
     const initialCustomNiche = typeof answers.custom_niche_text === 'string' ? answers.custom_niche_text : '';
@@ -43,6 +63,14 @@ export function Phase1BusinessProfile({ locale, t, businessOwner, answers, taxon
 
     const [search, setSearch] = useState('');
     const [otherOpen, setOtherOpen] = useState(initialNicheId === null && initialCustomNiche.trim() !== '');
+    const [retrying, setRetrying] = useState(false);
+
+    const retryDcp = () => {
+        setRetrying(true);
+        router.post(route('discovery.intake.store'), {}, { onFinish: () => setRetrying(false) });
+    };
+
+    const nicheBadge = (id: number) => (id === suggestedNicheId ? t('phase1.suggestedBadge') : undefined);
 
     const isValid = nicheId.value !== null || (otherOpen && customNiche.value.trim() !== '');
 
@@ -94,6 +122,15 @@ export function Phase1BusinessProfile({ locale, t, businessOwner, answers, taxon
 
     return (
         <div className="flex flex-col gap-6">
+            {dcp?.status === 'empty' && (
+                <div className="flex flex-col gap-2 rounded-md border border-line bg-surface-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="font-body text-sm text-text-muted">{t('phase1.dcpFailedBody')}</p>
+                    <Button variant="ghost" size="sm" onClick={retryDcp} disabled={retrying}>
+                        {retrying ? t('phase1.dcpRetrying') : t('phase1.dcpRetry')}
+                    </Button>
+                </div>
+            )}
+
             <div className="flex flex-col gap-3">
                 <p className="font-ui text-xs font-semibold uppercase tracking-wide text-text-muted">
                     {t('phase1.profileHeading')}
@@ -140,6 +177,7 @@ export function Phase1BusinessProfile({ locale, t, businessOwner, answers, taxon
                                 onSelect={() => selectNiche(niche, category.id)}
                                 title={niche.name[locale]}
                                 subtitle={category.name[locale]}
+                                badge={nicheBadge(niche.id)}
                             />
                         ))}
                     </div>
@@ -165,18 +203,13 @@ export function Phase1BusinessProfile({ locale, t, businessOwner, answers, taxon
                         </button>
                         <p className="font-ui text-sm font-medium text-text">{activeCategory.name[locale]}</p>
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                            {/*
-                                TODO(S3.1): once dcp.generate is wired, pre-highlight the niche
-                                matching the DCP's detected_niche (when confidence is high and no
-                                niche_id answer is saved yet) with a "Suggested based on your
-                                description" badge here.
-                            */}
                             {activeCategory.niches.map((niche) => (
                                 <SelectableCard
                                     key={niche.id}
                                     selected={nicheId.value === niche.id}
                                     onSelect={() => selectNiche(niche, activeCategory.id)}
                                     title={niche.name[locale]}
+                                    badge={nicheBadge(niche.id)}
                                 />
                             ))}
                         </div>

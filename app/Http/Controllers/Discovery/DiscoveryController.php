@@ -84,6 +84,31 @@ class DiscoveryController extends Controller
                 ])
             : null;
 
+        // Phase 1 needs the latest DCP for the "Suggested based on your
+        // description" pre-highlight (§3.2) and the retry-on-failure banner.
+        $dcp = null;
+        if ($targetPhase === DiscoveryPhase::Phase1) {
+            $profile = $session->latestDcpProfile;
+
+            if ($profile !== null) {
+                $detected = null;
+                $nicheId = $profile->payload['detected_niche']['niche_id'] ?? null;
+
+                if (! $profile->isEmpty() && is_int($nicheId)) {
+                    $detected = [
+                        'niche_id' => $nicheId,
+                        'category_id' => TaxonomyNiche::whereKey($nicheId)->value('taxonomy_category_id'),
+                        'confidence' => $profile->payload['detected_niche']['confidence'] ?? null,
+                    ];
+                }
+
+                $dcp = [
+                    'status' => $profile->isEmpty() ? 'empty' : 'ok',
+                    'detected_niche' => $detected,
+                ];
+            }
+        }
+
         $serviceCatalog = null;
         $selectedServices = null;
         $showPricesToBo = false;
@@ -154,6 +179,7 @@ class DiscoveryController extends Controller
             'visitedPhaseKeys' => collect(array_slice($ordered, 0, $currentIndex + 1))
                 ->map(fn (DiscoveryPhase $p) => $p->value),
             'answers' => $answers,
+            'dcp' => $dcp,
             'language' => $language->value,
             'serviceCatalog' => $serviceCatalog,
             'selectedServices' => $selectedServices,

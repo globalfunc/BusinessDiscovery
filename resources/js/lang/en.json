@@ -61,6 +61,26 @@
             "placeholder": "The real specification preview lands in session S3.5."
         }
     },
+    "phase0": {
+        "modeToggleLabel": "Intake mode",
+        "modeFree": "Write freely",
+        "modeGuided": "Answer 4 questions",
+        "placeholder1": "What do you do? What's working? What's costing you time or customers?",
+        "placeholder2": "Tell us about your customers — who they are, how they find you, what they keep asking for.",
+        "placeholder3": "What would you fix about your business tomorrow if you could?",
+        "hint1": "Most of my customers come from word of mouth.",
+        "hint2": "I lose time answering the same questions every day.",
+        "hint3": "I want customers to find and book us online.",
+        "guided_offer": "What does your business offer, and to whom?",
+        "guided_channels": "How do customers currently find and book/buy from you?",
+        "guided_frustrations": "What frustrates you most day-to-day (admin, no-shows, marketing, visibility…)?",
+        "guided_success": "What would success online look like in 6–12 months? What makes you better than competitors?",
+        "optionalHeading": "Optional",
+        "websiteLabel": "Existing website",
+        "socialLabel": "Social profiles",
+        "socialPlaceholder": "Links, separated by commas",
+        "analyzing": "Analyzing…"
+    },
     "phase1": {
         "profileHeading": "Your details",
         "nameLabel": "Your name",
@@ -74,7 +94,11 @@
         "otherDescription": "Describe your business in a few words",
         "otherPlaceholder": "e.g. mobile pet grooming service",
         "otherHint": "We'll flag this for a quick manual review.",
-        "requiredHint": "Pick a category and niche (or describe your own) to continue."
+        "requiredHint": "Pick a category and niche (or describe your own) to continue.",
+        "suggestedBadge": "Suggested based on your description",
+        "dcpFailedBody": "We couldn't analyze your description automatically. You can retry, or simply continue — everything works without it.",
+        "dcpRetry": "Retry analysis",
+        "dcpRetrying": "Retrying…"
     },
     "phase2": {
         "catalogHeading": "Choose the services you're interested in",

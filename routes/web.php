@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\TaxonomyCategoryController;
 use App\Http\Controllers\Admin\TaxonomyNicheController;
 use App\Http\Controllers\Discovery\BrandingController;
 use App\Http\Controllers\Discovery\DiscoveryController;
+use App\Http\Controllers\Discovery\IntakeController;
 use App\Http\Controllers\Discovery\SelectedServiceController;
 use App\Http\Controllers\Discovery\UploadController;
 use App\Http\Controllers\Referral\ReferralLandingController;
@@ -71,6 +72,7 @@ Route::post('/language', [DiscoveryController::class, 'setLanguage'])->name('lan
 Route::middleware(['discovery.access'])->prefix('discovery')->name('discovery.')->group(function () {
     Route::patch('/answers', [DiscoveryController::class, 'updateAnswer'])->name('answers.update');
     Route::post('/navigate', [DiscoveryController::class, 'navigate'])->name('navigate');
+    Route::post('/intake', [IntakeController::class, 'store'])->name('intake.store');
     Route::post('/submit', [DiscoveryController::class, 'submit'])->name('submit');
     Route::post('/services', [SelectedServiceController::class, 'store'])->name('services.store');
     Route::patch('/services/{selectedService}', [SelectedServiceController::class, 'update'])->name('services.update');

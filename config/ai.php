@@ -39,7 +39,11 @@ return [
     */
 
     'tools' => [
-        //
+        // Schema-constrained JSON extraction on Phase 0 continue (§3.1); the
+        // BO waits on this synchronously, so the output stays tightly capped.
+        'dcp.generate' => [
+            'max_tokens' => 2048,
+        ],
     ],
 
     /*

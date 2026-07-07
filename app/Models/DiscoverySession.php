@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class DiscoverySession extends Model
 {
@@ -50,5 +51,15 @@ class DiscoverySession extends Model
     public function uploads(): HasMany
     {
         return $this->hasMany(Upload::class);
+    }
+
+    public function dcpProfiles(): HasMany
+    {
+        return $this->hasMany(DcpProfile::class);
+    }
+
+    public function latestDcpProfile(): HasOne
+    {
+        return $this->hasOne(DcpProfile::class)->ofMany('version', 'max');
     }
 }

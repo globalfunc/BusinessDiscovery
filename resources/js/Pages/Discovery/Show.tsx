@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { BottomActionBar } from '@/components/discovery/BottomActionBar';
+import { Phase0Intake } from '@/components/discovery/phases/Phase0Intake';
 import { Phase1BusinessProfile } from '@/components/discovery/phases/Phase1BusinessProfile';
 import { Phase2ServicesSelection } from '@/components/discovery/phases/Phase2ServicesSelection';
 import { Phase3Branding } from '@/components/discovery/phases/Phase3Branding';
@@ -23,6 +24,11 @@ type PhaseItem = { key: string; label: string };
 type NicheOption = { id: number; name: { en: string; bg: string } };
 type CategoryOption = { id: number; name: { en: string; bg: string }; niches: NicheOption[] };
 
+export type DcpState = {
+    status: 'ok' | 'empty';
+    detected_niche: { niche_id: number; category_id: number | null; confidence: number | null } | null;
+} | null;
+
 type Props = {
     businessOwner: {
         name: string;
@@ -36,6 +42,7 @@ type Props = {
     phases: PhaseItem[];
     visitedPhaseKeys: string[];
     answers: Record<string, unknown>;
+    dcp: DcpState;
     language: string;
     taxonomyCategories: CategoryOption[] | null;
     serviceCatalog: CatalogService[] | null;
@@ -55,6 +62,7 @@ export default function DiscoveryShow({
     phases,
     visitedPhaseKeys,
     answers,
+    dcp,
     language,
     taxonomyCategories,
     serviceCatalog,
@@ -72,12 +80,14 @@ export default function DiscoveryShow({
     const [phase1Valid, setPhase1Valid] = useState(true);
     const [phase6Valid, setPhase6Valid] = useState(true);
     const [confirmOpen, setConfirmOpen] = useState(false);
+    const [generatingDcp, setGeneratingDcp] = useState(false);
 
     const phaseIndex = phases.findIndex((p) => p.key === phase);
     const previousPhase = phaseIndex > 0 ? phases[phaseIndex - 1] : null;
     const nextPhase = phaseIndex < phases.length - 1 ? phases[phaseIndex + 1] : null;
     const isReview = phase === 'review';
     const isSubmitted = session.status === 'submitted';
+    const isPhase0 = phase === 'phase_0';
     const isPhase1 = phase === 'phase_1';
     const isPhase2 = phase === 'phase_2';
     const isPhase3 = phase === 'phase_3';
@@ -112,6 +122,20 @@ export default function DiscoveryShow({
             setConfirmOpen(true);
             return;
         }
+        if (isPhase0) {
+            // Phase 0 continue triggers the dcp.generate call server-side
+            // before advancing; failure still advances (empty DCP + retry
+            // offer on Phase 1), so this never blocks the flow.
+            setGeneratingDcp(true);
+            router.post(route('discovery.intake.store'), {}, { onFinish: () => setGeneratingDcp(false) });
+            return;
+        }
+        if (!nextPhase) return;
+        router.post(route('discovery.navigate'), { to: nextPhase.key });
+    };
+
+    // Skip bypasses the Phase 0 AI call — skipping intake means no DCP.
+    const goSkip = () => {
         if (!nextPhase) return;
         router.post(route('discovery.navigate'), { to: nextPhase.key });
     };
@@ -129,12 +153,16 @@ export default function DiscoveryShow({
                         onBack={goBack}
                         onContinue={goContinue}
                         backLabel={t('common.back')}
-                        continueLabel={isReview ? t('submit.cta') : t('common.continue')}
+                        continueLabel={
+                            isReview ? t('submit.cta') : generatingDcp ? t('phase0.analyzing') : t('common.continue')
+                        }
                         savingLabel={t('common.saving')}
                         savedLabel={t('common.saved')}
                         saveState={saveState}
                         backDisabled={!previousPhase}
-                        continueDisabled={submitting || (isPhase1 && !phase1Valid) || (isPhase6 && !phase6Valid)}
+                        continueDisabled={
+                            submitting || generatingDcp || (isPhase1 && !phase1Valid) || (isPhase6 && !phase6Valid)
+                        }
                     />
                 )
             }
@@ -176,13 +204,16 @@ export default function DiscoveryShow({
                         <p className="mt-1 font-body text-sm text-text-muted">{t(`phases.${phase}.helper`)}</p>
                     </div>
 
-                    {isPhase1 ? (
+                    {isPhase0 ? (
+                        <Phase0Intake t={t} answers={answers} />
+                    ) : isPhase1 ? (
                         <Phase1BusinessProfile
                             locale={locale}
                             t={t}
                             businessOwner={businessOwner}
                             answers={answers}
                             taxonomyCategories={taxonomyCategories ?? []}
+                            dcp={dcp}
                             onValidityChange={setPhase1Valid}
                         />
                     ) : isPhase2 ? (
@@ -239,7 +270,7 @@ export default function DiscoveryShow({
 
                     {!isReview && !isPhase1 && !isPhase2 && !isPhase6 && (
                         <div>
-                            <Button variant="ghost" size="sm" onClick={goContinue} disabled={submitting}>
+                            <Button variant="ghost" size="sm" onClick={goSkip} disabled={submitting || generatingDcp}>
                                 {t('common.skip')}
                             </Button>
                         </div>

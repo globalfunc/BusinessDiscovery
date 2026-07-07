@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\Ai\PromptTemplateRegistry;
+use App\Services\Ai\Tools\Dcp\DcpPromptTemplate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,6 +21,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        $this->app->make(PromptTemplateRegistry::class)->register(new DcpPromptTemplate);
     }
 }
