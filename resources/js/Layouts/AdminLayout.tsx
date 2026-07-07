@@ -26,7 +26,7 @@ type NavItem = {
 const navItems: NavItem[] = [
     { label: 'Dashboard', icon: LayoutDashboard, routeName: 'admin.dashboard', href: '/admin/dashboard' },
     { label: 'Business Owners', icon: Users, routeName: 'admin.business-owners.index', href: '/admin/business-owners' },
-    { label: 'Pipeline', icon: Kanban },
+    { label: 'Pipeline', icon: Kanban, routeName: 'admin.pipeline.index', href: '/admin/pipeline' },
     { label: 'Specs', icon: FileText },
     { label: 'Proposals', icon: FileSignature },
     { label: 'Content', icon: Layers, routeName: 'admin.content.index', href: '/admin/content' },

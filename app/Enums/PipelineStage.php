@@ -13,4 +13,19 @@ enum PipelineStage: string
     case Negotiation = 'negotiation';
     case Won = 'won';
     case Lost = 'lost';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Prospect => 'Prospect',
+            self::ReferralSent => 'Referral sent',
+            self::LinkVisited => 'Link visited',
+            self::DiscoveryInProgress => 'Discovery in progress',
+            self::DiscoveryComplete => 'Discovery complete',
+            self::ProposalSent => 'Proposal sent',
+            self::Negotiation => 'Negotiation',
+            self::Won => 'Won',
+            self::Lost => 'Lost',
+        };
+    }
 }

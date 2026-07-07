@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\BusinessOwnerController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PipelineController;
 use App\Http\Controllers\Admin\ReferralTokenController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
@@ -22,6 +23,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     Route::resource('business-owners', BusinessOwnerController::class)
         ->except(['create', 'edit']);
+
+    Route::prefix('pipeline')->name('pipeline.')->group(function () {
+        Route::get('/', [PipelineController::class, 'index'])->name('index');
+        Route::patch('/business-owners/{businessOwner}/stage', [PipelineController::class, 'updateStage'])->name('update-stage');
+    });
 
     Route::prefix('business-owners/{businessOwner}/referral-tokens')
         ->name('business-owners.referral-tokens.')
