@@ -9,6 +9,7 @@ use Anthropic\Messages\OutputConfig\Effort;
 use Anthropic\Messages\TextBlock;
 use App\Enums\AiCallStatus;
 use App\Models\AiCall;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -20,17 +21,94 @@ use Throwable;
  * pass it here; this class never throws past its own boundary — a failed
  * request is reported and returned as an unsuccessful AiCallResult so a
  * caller's UI can fall back gracefully (§7.7).
+ *
+ * The §7.6 vendor-neutrality output filter is applied here, once, for every
+ * tool — so DCP, the four suggest.* tools, and any future text-emitting tool
+ * inherit it without per-tool wiring. On a blocklist hit, call() regenerates
+ * once with a corrective turn; a second hit is redacted and flagged
+ * vendor_leak on its ai_calls row for admin review.
  */
 class AiClient
 {
     private readonly Client $client;
 
-    public function __construct(?Client $client = null)
+    private readonly VendorFilter $vendorFilter;
+
+    public function __construct(?Client $client = null, ?VendorFilter $vendorFilter = null)
     {
         $this->client = $client ?? new Client(apiKey: config('ai.api_key'));
+        $this->vendorFilter = $vendorFilter ?? app(VendorFilter::class);
     }
 
+    /**
+     * Dispatch a request, then run it through the §7.6 vendor filter. Callers
+     * see a single AiCallResult whose text is already vendor-safe; the
+     * regeneration/redaction is invisible to them, preserving the never-block
+     * suggestion contract (a redacted-but-parseable result still counts as
+     * successful, so the tool never falls through to presets on a leak alone).
+     */
     public function call(AiCallRequest $request): AiCallResult
+    {
+        $result = $this->dispatch($request);
+
+        if (! $result->successful || $result->text === null) {
+            return $result;
+        }
+
+        $matches = $this->vendorFilter->scan($result->text);
+
+        if ($matches === []) {
+            return $result;
+        }
+
+        // First hit → one automatic regeneration with a corrective instruction.
+        $retry = $this->dispatch($this->vendorFilter->correctiveRequest($request, $result->text, $matches));
+
+        if ($retry->successful && $retry->text !== null) {
+            $retryMatches = $this->vendorFilter->scan($retry->text);
+
+            if ($retryMatches === []) {
+                return $retry;
+            }
+
+            // Second hit → redact + log vendor_leak on the regenerated call.
+            return $this->redactAndFlag($retry, $retryMatches);
+        }
+
+        // Regeneration failed to produce usable text: never block — redact the
+        // first attempt and flag it so output stays vendor-safe and parseable.
+        return $this->redactAndFlag($result, $matches);
+    }
+
+    /**
+     * Redact matched terms to their generic labels and mark the call's
+     * ai_calls row vendor_leak=true for admin review (§7.6.2).
+     *
+     * @param  VendorMatch[]  $matches
+     */
+    private function redactAndFlag(AiCallResult $result, array $matches): AiCallResult
+    {
+        $result->aiCall->update(['vendor_leak' => true]);
+
+        Log::warning('Vendor leak persisted after regeneration; redacted for admin review.', [
+            'ai_call_id' => $result->aiCall->id,
+            'tool' => $result->aiCall->tool,
+            'terms' => $this->vendorFilter->leakedTerms($matches),
+        ]);
+
+        return new AiCallResult(
+            successful: true,
+            text: $this->vendorFilter->redact($result->text ?? '', $matches),
+            aiCall: $result->aiCall,
+        );
+    }
+
+    /**
+     * One raw round-trip: call the Messages API and log the ai_calls row.
+     * Protected so the vendor-filter orchestration in call() can be tested
+     * against a queued transport without a live API.
+     */
+    protected function dispatch(AiCallRequest $request): AiCallResult
     {
         $model = $request->model ?? $this->toolConfig($request->tool, 'model') ?? config('ai.default_model');
         $effort = $request->effort ?? $this->toolConfig($request->tool, 'effort') ?? config('ai.default_effort');

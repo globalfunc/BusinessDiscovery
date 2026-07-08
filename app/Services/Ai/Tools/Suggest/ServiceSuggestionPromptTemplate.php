@@ -3,13 +3,13 @@
 namespace App\Services\Ai\Tools\Suggest;
 
 use App\Services\Ai\Contracts\PromptTemplate;
+use App\Services\Ai\VendorPolicy;
 
 /**
- * System policy (§7.3 block 1) for suggest.services. The shared spine —
- * vendor neutrality (§7.6), grounding, language, JSON-only — is reused
- * verbatim by every suggest.* tool (S3.3's content/social + growth tools
- * should carry the same three-paragraph policy, swapping only the "what to
- * suggest" sentence). The card schema + count rules live in the assembler's
+ * System policy (§7.3 block 1) for suggest.services. Each suggest.* tool keeps
+ * its own role framing + grounding/format rules; the vendor-neutrality rule
+ * (§7.6.1) is injected from the shared VendorPolicy so all five live tools stay
+ * in lockstep. The card schema + count rules live in the assembler's
  * task-instruction block (§7.4), not here.
  */
 class ServiceSuggestionPromptTemplate implements PromptTemplate
@@ -26,11 +26,13 @@ class ServiceSuggestionPromptTemplate implements PromptTemplate
 
     public function systemPrompt(): string
     {
-        return <<<'PROMPT'
+        $vendorRule = VendorPolicy::systemRule();
+
+        return <<<PROMPT
 You are a solutions consultant for a digital agency, helping a business owner discover which online services would move their business forward. You produce structured Suggestion Cards — never a chat reply, never prose outside the JSON.
 
 Rules:
-- Never name, recommend, or allude to real third-party products, vendors, platforms, or brands. Every suggestion is a custom service delivered by us. Use capability-based names only (e.g. "online booking", never a brand).
+- {$vendorRule}
 - Ground every card in what the owner actually told us. Tie each card's features and rationale to their stated pains, goals, and context (the Discovery Context Profile and their own answers). Do not invent needs they never expressed.
 - Reference links the owner shared are inspiration for capabilities only — never name or describe them as recommendations in your output.
 - Suggest genuinely useful, distinct services; do not repeat services the owner has already selected. Prefer capabilities that match their niche and priority signals.

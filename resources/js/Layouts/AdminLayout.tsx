@@ -8,6 +8,7 @@ import {
     Layers,
     LogOut,
     Settings2,
+    ShieldAlert,
     Users,
 } from 'lucide-react';
 import { type ReactNode, useEffect, useRef } from 'react';
@@ -30,6 +31,7 @@ const navItems: NavItem[] = [
     { label: 'Specs', icon: FileText },
     { label: 'Proposals', icon: FileSignature },
     { label: 'Content', icon: Layers, routeName: 'admin.content.index', href: '/admin/content' },
+    { label: 'Vendor blocklist', icon: ShieldAlert, routeName: 'admin.vendor-blocklist.index', href: '/admin/vendor-blocklist' },
     { label: 'AI Settings', icon: Settings2 },
     { label: 'Usage', icon: BarChart3 },
 ];

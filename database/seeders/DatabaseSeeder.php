@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             TaxonomySeeder::class,
             ServiceCatalogSeeder::class,
             SettingSeeder::class,
+            VendorBlocklistSeeder::class,
         ]);
     }
 }

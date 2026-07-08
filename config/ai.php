@@ -92,4 +92,17 @@ return [
     'global_monthly_token_cap' => env('AI_GLOBAL_MONTHLY_TOKEN_CAP'),
     'rate_limit_per_minute' => env('AI_RATE_LIMIT_PER_MINUTE', 6),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Vendor-neutrality redaction (§7.6.2)
+    |--------------------------------------------------------------------------
+    |
+    | Fallback generic label the output filter swaps a leaked brand/vendor term
+    | for when a blocklist row has no per-term replacement of its own. Used only
+    | on the second hit (after the single regeneration), which also flags the
+    | ai_calls.vendor_leak column for admin review.
+    */
+
+    'vendor_redaction_label' => env('AI_VENDOR_REDACTION_LABEL', 'a custom solution'),
+
 ];

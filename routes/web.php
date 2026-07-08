@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TaxonomyCategoryController;
 use App\Http\Controllers\Admin\TaxonomyNicheController;
+use App\Http\Controllers\Admin\VendorBlocklistController;
 use App\Http\Controllers\Discovery\BrandingController;
 use App\Http\Controllers\Discovery\DiscoveryController;
 use App\Http\Controllers\Discovery\IntakeController;
@@ -58,6 +59,13 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::patch('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
 
         Route::patch('/settings/{key}', [SettingController::class, 'update'])->name('settings.update');
+    });
+
+    Route::prefix('vendor-blocklist')->name('vendor-blocklist.')->group(function () {
+        Route::get('/', [VendorBlocklistController::class, 'index'])->name('index');
+        Route::post('/', [VendorBlocklistController::class, 'store'])->name('store');
+        Route::patch('/{vendorBlocklistTerm}', [VendorBlocklistController::class, 'update'])->name('update');
+        Route::delete('/{vendorBlocklistTerm}', [VendorBlocklistController::class, 'destroy'])->name('destroy');
     });
 });
 
