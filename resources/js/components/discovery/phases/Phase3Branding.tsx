@@ -1,12 +1,18 @@
-import { Sparkles } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useState } from 'react';
 
 import { ColorPreferences } from '@/components/discovery/ColorPreferences';
 import { ReferenceLinksWithNotes, type ReferenceLinkNote } from '@/components/discovery/ReferenceLinksWithNotes';
 import { SelectableCard } from '@/components/discovery/SelectableCard';
+import type { SuggestionCardData } from '@/components/discovery/SuggestionCard';
+import { SuggestionPanel } from '@/components/discovery/SuggestionPanel';
 import { UploadZone, type UploadRecord } from '@/components/discovery/UploadZone';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { useAutosaveField } from '@/hooks/useAutosaveField';
+
+/** An accepted brand-direction card, persisted with the BO's own note (§6.3). */
+type AcceptedBrandingCard = SuggestionCardData & { note: string };
 
 const STYLE_CHIP_KEYS = [
     'modern',
@@ -35,11 +41,30 @@ export function Phase3Branding({ t, answers, hasLogo, initialUploads, initialQuo
     const initialColorPreset = typeof answers.color_preset === 'string' ? answers.color_preset : null;
     const initialColorCustomHex = typeof answers.color_custom_hex === 'string' ? answers.color_custom_hex : null;
     const initialReferenceLinks = Array.isArray(answers.reference_links) ? (answers.reference_links as ReferenceLinkNote[]) : [];
+    const initialAcceptedSuggestions = Array.isArray(answers.accepted_suggestions)
+        ? (answers.accepted_suggestions as AcceptedBrandingCard[])
+        : [];
 
     const styleChips = useAutosaveField<string[]>('phase_3', 'style_chips', initialStyleChips);
     const colorPreset = useAutosaveField<string | null>('phase_3', 'color_preset', initialColorPreset);
     const colorCustomHex = useAutosaveField<string | null>('phase_3', 'color_custom_hex', initialColorCustomHex);
     const referenceLinks = useAutosaveField<ReferenceLinkNote[]>('phase_3', 'reference_links', initialReferenceLinks);
+    // Accepted brand directions persist as a structured answer (no dedicated
+    // table — brand directions aren't catalog services); each keeps its own
+    // free-text note (§6.3), autosaved as a jsonb array.
+    const acceptedSuggestions = useAutosaveField<AcceptedBrandingCard[]>('phase_3', 'accepted_suggestions', initialAcceptedSuggestions);
+
+    const acceptSuggestion = (card: SuggestionCardData) => {
+        acceptedSuggestions.setValue([...acceptedSuggestions.value, { ...card, note: '' }]);
+    };
+
+    const updateAcceptedNote = (index: number, note: string) => {
+        acceptedSuggestions.setValue(acceptedSuggestions.value.map((c, i) => (i === index ? { ...c, note } : c)));
+    };
+
+    const removeAccepted = (index: number) => {
+        acceptedSuggestions.setValue(acceptedSuggestions.value.filter((_, i) => i !== index));
+    };
 
     const [uploads, setUploads] = useState<UploadRecord[]>(initialUploads);
     const [quota, setQuota] = useState(initialQuota);
@@ -105,14 +130,61 @@ export function Phase3Branding({ t, answers, hasLogo, initialUploads, initialQuo
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex items-start justify-between gap-3">
-                <p className="font-ui text-xs font-semibold uppercase tracking-wide text-text-muted">{t('phase3.styleHeading')}</p>
-                <Button type="button" variant="secondary" size="sm" disabled className="shrink-0 gap-1.5 border-accent/40 text-accent">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    {t('phase3.aiSuggestionsCta')}
-                </Button>
-            </div>
-            <p className="-mt-4 font-body text-xs text-text-faint">{t('phase3.aiSuggestionsComingSoon')}</p>
+            <p className="font-ui text-xs font-semibold uppercase tracking-wide text-text-muted">{t('phase3.styleHeading')}</p>
+
+            <SuggestionPanel
+                t={t}
+                endpoint={route('discovery.suggest.branding')}
+                ctaLabel={t('phase3.aiSuggestionsCta')}
+                onAccept={acceptSuggestion}
+            />
+
+            {acceptedSuggestions.value.length > 0 && (
+                <div className="flex flex-col gap-3">
+                    <p className="font-ui text-xs font-semibold uppercase tracking-wide text-text-muted">
+                        {t('phase3.acceptedDirectionsHeading')}
+                    </p>
+                    {acceptedSuggestions.value.map((card, index) => (
+                        <div key={index} className="flex flex-col gap-2 rounded-bo border border-transparent bg-surface p-4 shadow-[0_0_0_1.5px_var(--lb-accent-glow)]">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex flex-col gap-0.5">
+                                    <span className="font-ui text-sm font-semibold text-text">{card.title}</span>
+                                    {card.summary && <span className="font-body text-xs text-text-muted">{card.summary}</span>}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {card.tags.slice(0, 2).map((tag) => (
+                                        <Badge key={tag} variant="muted">
+                                            {tag.replace(/_/g, ' ')}
+                                        </Badge>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => removeAccepted(index)}
+                                        aria-label={t('phase2.remove')}
+                                        className="flex h-8 w-8 items-center justify-center rounded-md border border-line-strong text-text-faint hover:border-red/40 hover:text-red"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            </div>
+                            {card.features.length > 0 && (
+                                <ul className="flex flex-col gap-1 font-body text-xs text-text-muted">
+                                    {card.features.map((feature, i) => (
+                                        <li key={i}>• {feature}</li>
+                                    ))}
+                                </ul>
+                            )}
+                            <Textarea
+                                value={card.note}
+                                onChange={(e) => updateAcceptedNote(index, e.target.value)}
+                                placeholder={t('suggestions.notePlaceholder')}
+                                rows={2}
+                                className="text-xs"
+                            />
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {STYLE_CHIP_KEYS.map((key) => (

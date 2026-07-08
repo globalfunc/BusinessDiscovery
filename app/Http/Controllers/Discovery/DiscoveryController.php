@@ -122,7 +122,7 @@ class DiscoveryController extends Controller
                 ->value('value');
             $nicheId = is_int($nicheId) ? $nicheId : null;
 
-            $serviceCatalog = $this->gatedServiceCatalog($nicheId);
+            $serviceCatalog = $this->gatedServiceCatalog($nicheId, $this->dcpSignalsForOrdering($session));
             $selectedServices = $session->selectedServices()->orderBy('created_at')->get()
                 ->map(fn (SelectedService $s) => $s->toDiscoveryArray())
                 ->values();
@@ -232,14 +232,18 @@ class DiscoveryController extends Controller
 
     /**
      * Full catalog when no niche is confirmed yet (e.g. "Other" free-text
-     * niche); niche-filtered + recommended-flagged otherwise. Ordering:
-     * recommended-for-niche first, then alphabetical by English name.
+     * niche); niche-filtered + recommended-flagged otherwise.
      *
-     * TODO(S3.2): once dcp.suggest_services exists, accepted AI suggestions
-     * become custom selected_service rows — this catalog list itself does
-     * not change shape.
+     * Ordering (§3.3): DCP "Recommended for you" matches first, then
+     * recommended-for-niche, then alphabetical by English name. A service
+     * earns the personalized badge when its tags intersect the DCP's
+     * priority signals / pain points; `dcp_reason` (nullable) carries the
+     * matching pain-point label or signal for the "Recommended for you —
+     * {reason}" badge (design.md §6.2 / tech-spec §3.3).
+     *
+     * @param  array{tokens: string[], reasons: array<string, string>}|null  $dcpSignals
      */
-    private function gatedServiceCatalog(?int $nicheId): Collection
+    private function gatedServiceCatalog(?int $nicheId, ?array $dcpSignals): Collection
     {
         $services = Service::query()
             ->where('hidden', false)
@@ -247,12 +251,14 @@ class DiscoveryController extends Controller
             ->get();
 
         return $services
-            ->map(function (Service $service) use ($nicheId) {
+            ->map(function (Service $service) use ($nicheId, $dcpSignals) {
                 $recommended = false;
                 if ($nicheId !== null) {
                     $pivotNiche = $service->niches->firstWhere('id', $nicheId);
                     $recommended = (bool) ($pivotNiche?->pivot->recommended ?? false);
                 }
+
+                [$dcpRecommended, $dcpReason] = $this->dcpMatch($service, $dcpSignals);
 
                 return [
                     'id' => $service->id,
@@ -264,13 +270,72 @@ class DiscoveryController extends Controller
                     'price_min' => $service->price_min,
                     'price_max' => $service->price_max,
                     'recommended' => $recommended,
+                    'dcp_recommended' => $dcpRecommended,
+                    'dcp_reason' => $dcpReason,
                 ];
             })
             ->sortBy([
+                fn ($a, $b) => ($b['dcp_recommended'] <=> $a['dcp_recommended']),
                 fn ($a, $b) => ($b['recommended'] <=> $a['recommended']),
                 fn ($a, $b) => ($a['name']['en'] <=> $b['name']['en']),
             ])
             ->values();
+    }
+
+    /**
+     * A service matches the DCP when its tags overlap the DCP's priority
+     * signals / pain-point ids. Reason prefers the matching pain-point label
+     * (the emotional hook, in the BO's language); otherwise a humanized signal.
+     *
+     * @param  array{tokens: string[], reasons: array<string, string>}|null  $dcpSignals
+     * @return array{0: bool, 1: string|null}
+     */
+    private function dcpMatch(Service $service, ?array $dcpSignals): array
+    {
+        if ($dcpSignals === null) {
+            return [false, null];
+        }
+
+        $tags = array_filter((array) $service->tags, 'is_string');
+        $matched = array_values(array_intersect($tags, $dcpSignals['tokens']));
+
+        if ($matched === []) {
+            return [false, null];
+        }
+
+        return [true, $dcpSignals['reasons'][$matched[0]] ?? null];
+    }
+
+    /**
+     * Builds the token set + human reasons from the latest usable DCP for
+     * catalog ordering. Null when there's no usable DCP — the grid then
+     * falls back to niche-recommended ordering only (§3.9 static fallback).
+     *
+     * @return array{tokens: string[], reasons: array<string, string>}|null
+     */
+    private function dcpSignalsForOrdering(DiscoverySession $session): ?array
+    {
+        $profile = $session->latestDcpProfile;
+
+        if ($profile === null || $profile->isEmpty()) {
+            return null;
+        }
+
+        $reasons = [];
+
+        foreach ((array) ($profile->payload['pain_points'] ?? []) as $pain) {
+            if (is_array($pain) && is_string($pain['id'] ?? null) && is_string($pain['label'] ?? null)) {
+                $reasons[$pain['id']] = $pain['label'];
+            }
+        }
+
+        foreach (array_filter((array) ($profile->payload['priority_signals'] ?? []), 'is_string') as $signal) {
+            $reasons[$signal] ??= str_replace('_', ' ', $signal);
+        }
+
+        $tokens = array_keys($reasons);
+
+        return $tokens === [] ? null : ['tokens' => $tokens, 'reasons' => $reasons];
     }
 
     public function updateAnswer(Request $request): JsonResponse

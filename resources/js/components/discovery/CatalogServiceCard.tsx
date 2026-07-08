@@ -18,6 +18,8 @@ export type CatalogService = {
     price_min: number | null;
     price_max: number | null;
     recommended: boolean;
+    dcp_recommended?: boolean;
+    dcp_reason?: string | null;
 };
 
 /**
@@ -58,10 +60,18 @@ export function CatalogServiceCard({
                 {priceLabel && <span className="font-ui text-xs text-text-muted">{priceLabel}</span>}
             </div>
 
-            {service.recommended && (
+            {service.dcp_recommended ? (
                 <Badge variant="accent" className="w-fit">
-                    {t('phase2.recommendedBadge')}
+                    {service.dcp_reason
+                        ? t('phase2.dcpRecommendedBadgeReason', { reason: service.dcp_reason })
+                        : t('phase2.dcpRecommendedBadge')}
                 </Badge>
+            ) : (
+                service.recommended && (
+                    <Badge variant="accent" className="w-fit">
+                        {t('phase2.recommendedBadge')}
+                    </Badge>
+                )
             )}
 
             <div className="flex flex-col gap-0.5">

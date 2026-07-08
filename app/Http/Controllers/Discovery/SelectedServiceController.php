@@ -6,14 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\BusinessOwner;
 use App\Models\DiscoverySession;
 use App\Models\SelectedService;
+use App\Models\Service;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class SelectedServiceController extends Controller
 {
     /**
-     * Add a catalog service (service_id set) or a custom entry
-     * (service_id omitted, name/description/features supplied by the BO).
+     * Add a catalog service (service_id set), a BO-authored custom entry
+     * (service_id omitted), or an accepted AI suggestion (origin=ai_suggestion,
+     * §3.3/S3.2). An accepted suggestion whose related_catalog_key resolves to
+     * a real service links to that catalog row (keeping its curated features);
+     * otherwise it lands as a bespoke custom service — both tagged
+     * origin=ai_suggestion so provenance survives (§5.3).
      */
     public function store(Request $request): JsonResponse
     {
@@ -21,7 +26,9 @@ class SelectedServiceController extends Controller
 
         $data = $request->validate([
             'service_id' => ['nullable', 'integer', 'exists:services,id'],
-            'name' => ['required_without:service_id', 'nullable', 'string', 'max:255'],
+            'origin' => ['nullable', 'in:catalog,bo_custom,ai_suggestion'],
+            'related_catalog_key' => ['nullable', 'string', 'max:255'],
+            'name' => ['required_without_all:service_id,related_catalog_key', 'nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
             'features' => ['nullable', 'array'],
             'features.*' => ['string', 'max:255'],
@@ -29,12 +36,21 @@ class SelectedServiceController extends Controller
             'reference_links.*' => ['string', 'max:500'],
         ]);
 
+        $origin = $data['origin'] ?? null;
+
+        // Resolve an accepted suggestion's catalog link to a service_id.
+        if (empty($data['service_id']) && ! empty($data['related_catalog_key'])) {
+            $data['service_id'] = Service::where('key', $data['related_catalog_key'])
+                ->where('hidden', false)
+                ->value('id');
+        }
+
         if (! empty($data['service_id'])) {
             $selected = $session->selectedServices()->firstOrCreate(
                 ['service_id' => $data['service_id']],
                 [
                     'custom' => false,
-                    'origin' => 'catalog',
+                    'origin' => $origin ?? 'catalog',
                     'features' => $data['features'] ?? [],
                     'priority' => false,
                 ],
@@ -43,7 +59,7 @@ class SelectedServiceController extends Controller
             $selected = $session->selectedServices()->create([
                 'service_id' => null,
                 'custom' => true,
-                'origin' => 'bo_custom',
+                'origin' => $origin ?? 'bo_custom',
                 'name' => $data['name'] ?? null,
                 'description' => $data['description'] ?? null,
                 'features' => $data['features'] ?? [],

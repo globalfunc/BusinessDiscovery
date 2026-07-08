@@ -1,10 +1,10 @@
-import { Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
 import { AddCustomServiceForm } from '@/components/discovery/AddCustomServiceForm';
 import { CatalogServiceCard, type CatalogService } from '@/components/discovery/CatalogServiceCard';
 import { SelectedServiceCard, type SelectedServiceRecord } from '@/components/discovery/SelectedServiceCard';
-import { Button } from '@/components/ui/button';
+import { SuggestionPanel } from '@/components/discovery/SuggestionPanel';
+import type { SuggestionCardData } from '@/components/discovery/SuggestionCard';
 import type { Locale } from '@/lib/i18n';
 
 type Props = {
@@ -43,16 +43,36 @@ export function Phase2ServicesSelection({ locale, t, serviceCatalog, initialSele
         window.axios.patch(route('discovery.services.update', { selectedService: id }), payload);
     };
 
+    // Accepting an AI suggestion creates a selected_service (catalog-linked via
+    // related_catalog_key when it matches, else a custom service tagged
+    // origin=ai_suggestion) — it then appears, editable, in the list below.
+    const acceptSuggestion = (card: SuggestionCardData) =>
+        window.axios
+            .post(route('discovery.services.store'), {
+                origin: 'ai_suggestion',
+                related_catalog_key: card.related_catalog_key,
+                name: card.title,
+                description: card.summary,
+                features: card.features,
+            })
+            .then(({ data }) => {
+                setSelectedServices((prev) =>
+                    prev.some((s) => s.id === data.selectedService.id) ? prev : [...prev, data.selectedService],
+                );
+            });
+
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center justify-between gap-3">
                 <p className="font-ui text-xs font-semibold uppercase tracking-wide text-text-muted">{t('phase2.catalogHeading')}</p>
-                <Button type="button" variant="secondary" size="sm" disabled className="shrink-0 gap-1.5 border-accent/40 text-accent">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    {t('phase2.aiSuggestionsCta')}
-                </Button>
             </div>
-            <p className="-mt-4 font-body text-xs text-text-faint">{t('phase2.aiSuggestionsComingSoon')}</p>
+
+            <SuggestionPanel
+                t={t}
+                endpoint={route('discovery.suggest.services')}
+                ctaLabel={t('phase2.aiSuggestionsCta')}
+                onAccept={acceptSuggestion}
+            />
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {serviceCatalog.map((service) => {

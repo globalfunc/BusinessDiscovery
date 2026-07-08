@@ -44,6 +44,15 @@ return [
         'dcp.generate' => [
             'max_tokens' => 2048,
         ],
+
+        // Synchronous ✨ suggestion calls (§7.1): 3–5 feature-rich cards, so
+        // a little more room than the DCP but still capped for the 25s budget.
+        'suggest.services' => [
+            'max_tokens' => 3072,
+        ],
+        'suggest.branding' => [
+            'max_tokens' => 3072,
+        ],
     ],
 
     /*

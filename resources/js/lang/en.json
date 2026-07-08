@@ -103,6 +103,8 @@
     "phase2": {
         "catalogHeading": "Choose the services you're interested in",
         "recommendedBadge": "Recommended for your niche",
+        "dcpRecommendedBadge": "Recommended for you",
+        "dcpRecommendedBadgeReason": "Recommended for you — {reason}",
         "featuresToggle": "Features",
         "add": "+ Add",
         "added": "✓ Added",
@@ -124,8 +126,25 @@
         "referenceLinkPlaceholder": "https://…",
         "referenceLinksHint": "Sites or apps whose functionality you like — for inspiration only, never shared back as a recommendation."
     },
+    "suggestions": {
+        "suggested": "Suggested",
+        "added": "Added",
+        "accept": "Add",
+        "dismiss": "Not for me",
+        "undo": "Undo",
+        "dismissedNotice": "Dismissed \"{title}\"",
+        "notePlaceholder": "Add a note or tweak this…",
+        "optIn": "Optional — we'll only suggest when you ask.",
+        "regenerate": "Regenerate",
+        "skip": "Skip suggestions",
+        "unavailable": "AI suggestions are temporarily unavailable — continue manually.",
+        "loading1": "Reading your answers…",
+        "loading2": "Matching ideas to your business…",
+        "loading3": "Shaping suggestions…"
+    },
     "phase3": {
         "styleHeading": "Which styles feel right for your brand?",
+        "acceptedDirectionsHeading": "Your chosen directions",
         "styleChips": {
             "modern": "Modern",
             "minimal": "Minimal",

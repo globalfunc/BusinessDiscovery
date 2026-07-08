@@ -13,6 +13,7 @@ use App\Http\Controllers\Discovery\BrandingController;
 use App\Http\Controllers\Discovery\DiscoveryController;
 use App\Http\Controllers\Discovery\IntakeController;
 use App\Http\Controllers\Discovery\SelectedServiceController;
+use App\Http\Controllers\Discovery\SuggestionController;
 use App\Http\Controllers\Discovery\UploadController;
 use App\Http\Controllers\Referral\ReferralLandingController;
 use Illuminate\Support\Facades\Route;
@@ -74,6 +75,8 @@ Route::middleware(['discovery.access'])->prefix('discovery')->name('discovery.')
     Route::post('/navigate', [DiscoveryController::class, 'navigate'])->name('navigate');
     Route::post('/intake', [IntakeController::class, 'store'])->name('intake.store');
     Route::post('/submit', [DiscoveryController::class, 'submit'])->name('submit');
+    Route::post('/suggest/services', [SuggestionController::class, 'services'])->name('suggest.services');
+    Route::post('/suggest/branding', [SuggestionController::class, 'branding'])->name('suggest.branding');
     Route::post('/services', [SelectedServiceController::class, 'store'])->name('services.store');
     Route::patch('/services/{selectedService}', [SelectedServiceController::class, 'update'])->name('services.update');
     Route::delete('/services/{selectedService}', [SelectedServiceController::class, 'destroy'])->name('services.destroy');
