@@ -62,4 +62,14 @@ class DiscoverySession extends Model
     {
         return $this->hasOne(DcpProfile::class)->ofMany('version', 'max');
     }
+
+    public function specDocuments(): HasMany
+    {
+        return $this->hasMany(SpecDocument::class);
+    }
+
+    public function latestSpecDocument(): HasOne
+    {
+        return $this->hasOne(SpecDocument::class)->ofMany('version', 'max');
+    }
 }

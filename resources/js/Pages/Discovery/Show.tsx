@@ -9,7 +9,7 @@ import { Phase3Branding } from '@/components/discovery/phases/Phase3Branding';
 import { Phase4ContentSocial } from '@/components/discovery/phases/Phase4ContentSocial';
 import { Phase5GrowthOperations } from '@/components/discovery/phases/Phase5GrowthOperations';
 import { Phase6BillingTimeline } from '@/components/discovery/phases/Phase6BillingTimeline';
-import { ReviewPreview } from '@/components/discovery/ReviewPreview';
+import { ReviewPreview, type SpecDocumentPayload } from '@/components/discovery/ReviewPreview';
 import type { CatalogService } from '@/components/discovery/CatalogServiceCard';
 import type { SelectedServiceRecord } from '@/components/discovery/SelectedServiceCard';
 import type { UploadRecord } from '@/components/discovery/UploadZone';
@@ -52,7 +52,8 @@ type Props = {
     uploadQuota: { used: number; limit: number } | null;
     saasEligible: boolean;
     approxTotal: { min: number; max: number } | null;
-    reviewMarkdown: string | null;
+    specDocument: SpecDocumentPayload | null;
+    specStale: boolean;
 };
 
 export default function DiscoveryShow({
@@ -72,7 +73,8 @@ export default function DiscoveryShow({
     uploadQuota,
     saasEligible,
     approxTotal,
-    reviewMarkdown,
+    specDocument,
+    specStale,
 }: Props) {
     const locale = (language === 'bg' ? 'bg' : 'en') as Locale;
     const t = useTranslation(locale);
@@ -246,7 +248,7 @@ export default function DiscoveryShow({
                             onValidityChange={setPhase6Valid}
                         />
                     ) : isReview ? (
-                        <ReviewPreview t={t} markdown={reviewMarkdown ?? ''} />
+                        <ReviewPreview t={t} initialDocument={specDocument} stale={specStale} />
                     ) : (
                         <>
                             <div className="rounded-md border border-dashed border-line-strong bg-surface-2 p-4 font-body text-sm text-text-faint">

@@ -36,6 +36,26 @@ class DiscoverySpecRenderer
         return (new self($session->language))->build($session, $businessOwner);
     }
 
+    /**
+     * The ten localized §7.5 section headings, in order. spec.compile's task
+     * instruction pins the AI output to these exact headings so AI-compiled
+     * and fallback-rendered specs share one shape (and one preview parser).
+     *
+     * @return string[]
+     */
+    public static function sectionTitles(Language $language): array
+    {
+        $renderer = new self($language);
+
+        return array_map(
+            fn (string $key) => $renderer->t("review.sections.{$key}"),
+            [
+                'overview', 'goals', 'selectedServices', 'customServices', 'branding',
+                'contentSocial', 'growthOperations', 'billingBudgetTimeline', 'assets', 'openQuestions',
+            ],
+        );
+    }
+
     private function build(DiscoverySession $session, BusinessOwner $businessOwner): string
     {
         $answers = $session->answers()->get()->groupBy('phase')

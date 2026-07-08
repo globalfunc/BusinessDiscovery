@@ -17,7 +17,6 @@ use App\Models\Setting;
 use App\Models\TaxonomyCategory;
 use App\Models\TaxonomyNiche;
 use App\Models\Upload;
-use App\Support\DiscoverySpecRenderer;
 use App\Support\LanguageResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -153,9 +152,14 @@ class DiscoveryController extends Controller
             $approxTotal = $showPricesToBo ? $this->computeApproxTotal($session) : null;
         }
 
-        $reviewMarkdown = null;
+        // Review serves the latest stored spec version; when none exists the
+        // client fires spec.compile on mount (§7.2 "Review screen open").
+        $specDocument = null;
+        $specStale = false;
         if ($targetPhase === DiscoveryPhase::Review) {
-            $reviewMarkdown = DiscoverySpecRenderer::render($session, $businessOwner);
+            $document = $session->latestSpecDocument;
+            $specDocument = $document?->toDiscoveryArray();
+            $specStale = $document !== null && $this->answersChangedSince($session, $businessOwner, $document->created_at);
         }
 
         return Inertia::render('Discovery/Show', [
@@ -188,8 +192,21 @@ class DiscoveryController extends Controller
             'uploadQuota' => $uploadQuota,
             'saasEligible' => $saasEligible,
             'approxTotal' => $approxTotal,
-            'reviewMarkdown' => $reviewMarkdown,
+            'specDocument' => $specDocument,
+            'specStale' => $specStale,
         ]);
+    }
+
+    /**
+     * §3.8 staleness: editing answers, selections, or uploads after a spec
+     * version was generated flags it for regeneration (the Review screen
+     * shows a "Regenerate" hint rather than silently serving the stale doc).
+     */
+    private function answersChangedSince(DiscoverySession $session, BusinessOwner $businessOwner, \DateTimeInterface $generatedAt): bool
+    {
+        return $session->answers()->where('updated_at', '>', $generatedAt)->exists()
+            || $session->selectedServices()->where('updated_at', '>', $generatedAt)->exists()
+            || Upload::where('business_owner_id', $businessOwner->id)->where('created_at', '>', $generatedAt)->exists();
     }
 
     /**

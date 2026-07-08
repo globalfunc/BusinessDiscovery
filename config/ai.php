@@ -59,6 +59,16 @@ return [
         'suggest.growth' => [
             'max_tokens' => 3072,
         ],
+
+        // Full 10-section document generation (§7.5) — much longer output
+        // than the card tools; amend carries the whole revised document
+        // inside a JSON envelope, so it gets the same headroom.
+        'spec.compile' => [
+            'max_tokens' => 8192,
+        ],
+        'spec.amend' => [
+            'max_tokens' => 8192,
+        ],
     ],
 
     /*

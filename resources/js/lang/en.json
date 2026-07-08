@@ -323,8 +323,7 @@
     "review": {
         "amendHeading": "What should we change?",
         "amendPlaceholder": "Describe what you'd like to adjust about the specification...",
-        "amendComingSoon": "Coming soon — AI-assisted amendments land in a later session.",
-        "amendCta": "✨ Apply changes",
+        "amendCta": "Apply changes",
         "noneRecorded": "Nothing recorded yet.",
         "dcpPending": "A deeper goals & pain-points summary will appear here once the AI intake analysis is live.",
         "customNicheFlag": "flagged for admin review",
@@ -365,7 +364,17 @@
             "scope": "Confirm the final scope and any must-have integrations.",
             "timeline": "Confirm how flexible the launch timeline really is.",
             "integrations": "Any existing tools or data that need to carry over?"
-        }
+        },
+        "compiling": "Compiling your specification…",
+        "compileFailed": "We couldn't compile the specification right now.",
+        "retryCompile": "Try again",
+        "regenerate": "Regenerate",
+        "versionLabel": "Specification · version {version}",
+        "fallbackNote": "assembled from your answers (AI polish temporarily unavailable)",
+        "staleNotice": "You've changed answers since this version was generated — regenerate to bring the specification up to date.",
+        "amendHint": "Describe a change and the AI will revise the specification for you.",
+        "amendApplying": "Applying…",
+        "amendUnavailable": "AI amendments are temporarily unavailable — please try again in a moment."
     },
     "submit": {
         "cta": "Submit my specification",

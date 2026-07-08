@@ -7,6 +7,7 @@ use App\Models\DiscoverySession;
 use App\Models\SuggestionPreset;
 use App\Services\Ai\Contracts\InputAssembler;
 use App\Services\Ai\PromptTemplateRegistry;
+use App\Services\Ai\Support\DcpDigest;
 
 /**
  * Shared §7.3 context-block builders for the suggest.* assemblers: the DCP
@@ -50,48 +51,12 @@ abstract class AbstractSuggestionAssembler implements InputAssembler
     }
 
     /**
-     * Compact operator-facing digest of the latest usable DCP (§3.1) for the
-     * §7.3 DCP block. Returns '' when no DCP exists or it's empty, so the
-     * suggestion tool falls back to grounding on raw answers alone.
+     * The shared DCP digest (§7.3 block 3) — see {@see DcpDigest}, which
+     * spec.compile's assembler reuses too.
      */
     protected function dcpDigest(DiscoverySession $session): string
     {
-        $profile = $session->latestDcpProfile;
-
-        if ($profile === null || $profile->isEmpty()) {
-            return '';
-        }
-
-        $payload = $profile->payload;
-        $lines = [];
-
-        if (is_string($payload['summary'] ?? null)) {
-            $lines[] = $payload['summary'];
-        }
-
-        $lines[] = 'Digital maturity: '.($payload['digital_maturity'] ?? 'unknown');
-
-        $pains = $this->labels($payload['pain_points'] ?? []);
-        if ($pains !== []) {
-            $lines[] = 'Pain points: '.implode('; ', $pains);
-        }
-
-        $goals = $this->labels($payload['goals'] ?? []);
-        if ($goals !== []) {
-            $lines[] = 'Goals: '.implode('; ', $goals);
-        }
-
-        $strengths = array_filter((array) ($payload['strengths'] ?? []), 'is_string');
-        if ($strengths !== []) {
-            $lines[] = 'Strengths: '.implode('; ', $strengths);
-        }
-
-        $signals = array_filter((array) ($payload['priority_signals'] ?? []), 'is_string');
-        if ($signals !== []) {
-            $lines[] = 'Priority signals: '.implode(', ', $signals);
-        }
-
-        return implode("\n", $lines);
+        return DcpDigest::for($session);
     }
 
     /**
@@ -137,21 +102,5 @@ abstract class AbstractSuggestionAssembler implements InputAssembler
             ->first();
 
         return is_array($preset?->cards) ? $preset->cards : [];
-    }
-
-    /**
-     * @param  mixed  $items  DCP list of {id,label} objects
-     * @return string[]
-     */
-    private function labels(mixed $items): array
-    {
-        if (! is_array($items)) {
-            return [];
-        }
-
-        return array_values(array_filter(array_map(
-            fn ($item) => is_array($item) && is_string($item['label'] ?? null) ? $item['label'] : null,
-            $items,
-        )));
     }
 }

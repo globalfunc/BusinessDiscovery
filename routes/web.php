@@ -14,6 +14,7 @@ use App\Http\Controllers\Discovery\BrandingController;
 use App\Http\Controllers\Discovery\DiscoveryController;
 use App\Http\Controllers\Discovery\IntakeController;
 use App\Http\Controllers\Discovery\SelectedServiceController;
+use App\Http\Controllers\Discovery\SpecController;
 use App\Http\Controllers\Discovery\SuggestionController;
 use App\Http\Controllers\Discovery\UploadController;
 use App\Http\Controllers\Referral\ReferralLandingController;
@@ -87,6 +88,8 @@ Route::middleware(['discovery.access'])->prefix('discovery')->name('discovery.')
     Route::post('/suggest/branding', [SuggestionController::class, 'branding'])->name('suggest.branding');
     Route::post('/suggest/content-social', [SuggestionController::class, 'contentSocial'])->name('suggest.content_social');
     Route::post('/suggest/growth/{module}', [SuggestionController::class, 'growth'])->name('suggest.growth');
+    Route::post('/spec/compile', [SpecController::class, 'compile'])->name('spec.compile');
+    Route::post('/spec/amend', [SpecController::class, 'amend'])->name('spec.amend');
     Route::post('/services', [SelectedServiceController::class, 'store'])->name('services.store');
     Route::patch('/services/{selectedService}', [SelectedServiceController::class, 'update'])->name('services.update');
     Route::delete('/services/{selectedService}', [SelectedServiceController::class, 'destroy'])->name('services.destroy');
