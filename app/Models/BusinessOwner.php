@@ -30,6 +30,7 @@ class BusinessOwner extends Model
         'pre_selected_niche_id',
         'status',
         'current_stage',
+        'ai_token_cap',
     ];
 
     protected function casts(): array

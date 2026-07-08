@@ -31,6 +31,7 @@ type BusinessOwner = {
     pre_selected_niche_id: number | null;
     status: string;
     current_stage: string;
+    ai_token_cap: number | null;
     created_at: string | null;
 };
 
@@ -97,6 +98,7 @@ export default function BusinessOwnerShow({
         language: string;
         pre_selected_niche_id: string;
         status: string;
+        ai_token_cap: string;
         _method: string;
     }>({
         name: businessOwner.name,
@@ -107,6 +109,7 @@ export default function BusinessOwnerShow({
         language: businessOwner.language ?? '',
         pre_selected_niche_id: businessOwner.pre_selected_niche_id?.toString() ?? '',
         status: businessOwner.status,
+        ai_token_cap: businessOwner.ai_token_cap?.toString() ?? '',
         _method: 'put',
     });
 
@@ -296,6 +299,21 @@ export default function BusinessOwnerShow({
                                             value={editForm.data.admin_context}
                                             onChange={(e) => editForm.setData('admin_context', e.target.value)}
                                         />
+                                    </div>
+
+                                    <div className="flex flex-col gap-1.5">
+                                        <Label htmlFor="edit-ai-token-cap">AI token budget override</Label>
+                                        <Input
+                                            id="edit-ai-token-cap"
+                                            type="number"
+                                            min={0}
+                                            placeholder="Global default"
+                                            value={editForm.data.ai_token_cap}
+                                            onChange={(e) => editForm.setData('ai_token_cap', e.target.value)}
+                                        />
+                                        <p className="font-body text-xs text-text-faint">
+                                            Leave blank to use the global per-BO cap.
+                                        </p>
                                     </div>
 
                                     <DialogFooter>

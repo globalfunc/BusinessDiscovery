@@ -34,21 +34,32 @@ class AiClient
 
     private readonly VendorFilter $vendorFilter;
 
-    public function __construct(?Client $client = null, ?VendorFilter $vendorFilter = null)
+    private readonly BudgetGate $budgetGate;
+
+    public function __construct(?Client $client = null, ?VendorFilter $vendorFilter = null, ?BudgetGate $budgetGate = null)
     {
         $this->client = $client ?? new Client(apiKey: config('ai.api_key'));
         $this->vendorFilter = $vendorFilter ?? app(VendorFilter::class);
+        $this->budgetGate = $budgetGate ?? app(BudgetGate::class);
     }
 
     /**
-     * Dispatch a request, then run it through the §7.6 vendor filter. Callers
-     * see a single AiCallResult whose text is already vendor-safe; the
-     * regeneration/redaction is invisible to them, preserving the never-block
-     * suggestion contract (a redacted-but-parseable result still counts as
-     * successful, so the tool never falls through to presets on a leak alone).
+     * Run the §7.7 pre-flight gate (rate limit, then token budget), then
+     * dispatch and run the §7.6 vendor filter. Callers see a single
+     * AiCallResult whose text is already vendor-safe; the gate/regeneration/
+     * redaction are invisible to them, preserving the never-block contract —
+     * every tool already treats an unsuccessful result as its cue to fall
+     * back (presets / empty DCP / deterministic spec renderer), so a gated
+     * call needs no special handling downstream.
      */
     public function call(AiCallRequest $request): AiCallResult
     {
+        $blockedStatus = $this->budgetGate->check($request);
+
+        if ($blockedStatus !== null) {
+            return $this->blocked($request, $blockedStatus);
+        }
+
         $result = $this->dispatch($request);
 
         if (! $result->successful || $result->text === null) {
@@ -104,13 +115,35 @@ class AiClient
     }
 
     /**
+     * A gated call never reaches the API — still logged (§7.7 "all
+     * prompts/outputs logged for audit") with zero tokens/cost so usage
+     * queries and the admin usage explorer (S4.8) can distinguish it from a
+     * real attempt.
+     */
+    private function blocked(AiCallRequest $request, AiCallStatus $status): AiCallResult
+    {
+        $aiCall = AiCall::create([
+            'business_owner_id' => $request->businessOwner?->id,
+            'tool' => $request->tool,
+            'model' => $this->resolveModel($request),
+            'input_tokens' => 0,
+            'output_tokens' => 0,
+            'latency_ms' => 0,
+            'cost_estimate' => null,
+            'status' => $status,
+        ]);
+
+        return new AiCallResult(successful: false, text: null, aiCall: $aiCall);
+    }
+
+    /**
      * One raw round-trip: call the Messages API and log the ai_calls row.
      * Protected so the vendor-filter orchestration in call() can be tested
      * against a queued transport without a live API.
      */
     protected function dispatch(AiCallRequest $request): AiCallResult
     {
-        $model = $request->model ?? $this->toolConfig($request->tool, 'model') ?? config('ai.default_model');
+        $model = $this->resolveModel($request);
         $effort = $request->effort ?? $this->toolConfig($request->tool, 'effort') ?? config('ai.default_effort');
         $maxTokens = $request->maxTokens ?? $this->toolConfig($request->tool, 'max_tokens') ?? config('ai.default_max_tokens');
         $temperature = config('ai.default_temperature');
@@ -214,6 +247,11 @@ class AiClient
     private function toolConfig(string $tool, string $key): mixed
     {
         return config("ai.tools.{$tool}.{$key}");
+    }
+
+    private function resolveModel(AiCallRequest $request): string
+    {
+        return $request->model ?? $this->toolConfig($request->tool, 'model') ?? config('ai.default_model');
     }
 
     private function elapsedMs(float $startedAt): int

@@ -89,6 +89,7 @@ class BusinessOwnerController extends Controller
                 'pre_selected_niche_id' => $businessOwner->pre_selected_niche_id,
                 'status' => $businessOwner->status->value,
                 'current_stage' => $businessOwner->current_stage->value,
+                'ai_token_cap' => $businessOwner->ai_token_cap,
                 'created_at' => $businessOwner->created_at?->toIso8601String(),
             ],
             'niches' => $this->nicheOptions(),

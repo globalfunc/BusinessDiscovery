@@ -102,6 +102,11 @@ return [
     'global_monthly_token_cap' => env('AI_GLOBAL_MONTHLY_TOKEN_CAP'),
     'rate_limit_per_minute' => env('AI_RATE_LIMIT_PER_MINUTE', 6),
 
+    // 'hard' blocks the call once a cap is reached (routes to each tool's
+    // existing fallback, §7.7); 'soft' only warns (logs) and lets calls
+    // through — useful while calibrating caps against real usage.
+    'budget_mode' => env('AI_BUDGET_MODE', 'hard'),
+
     /*
     |--------------------------------------------------------------------------
     | Vendor-neutrality redaction (§7.6.2)
