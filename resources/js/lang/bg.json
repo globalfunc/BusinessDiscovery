@@ -221,7 +221,8 @@
             "interested": "Да, интересува ме",
             "maybe": "Може би / разкажете ми повече",
             "not_interested": "Не се интересувам"
-        }
+        },
+        "acceptedIdeasHeading": "Идеи, които добавихте"
     },
     "phase5": {
         "modules": {
@@ -280,7 +281,8 @@
                 }
             }
         },
-        "enableToggleLabel": "Включи този модул"
+        "enableToggleLabel": "Включи този модул",
+        "acceptedIdeasHeading": "Идеи, които добавихте"
     },
     "phase6": {
         "approxTotalLabel": "Прогнозна обща сума",

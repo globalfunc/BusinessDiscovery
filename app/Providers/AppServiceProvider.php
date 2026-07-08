@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Services\Ai\PromptTemplateRegistry;
 use App\Services\Ai\Tools\Dcp\DcpPromptTemplate;
 use App\Services\Ai\Tools\Suggest\BrandingSuggestionPromptTemplate;
+use App\Services\Ai\Tools\Suggest\ContentSocialSuggestionPromptTemplate;
+use App\Services\Ai\Tools\Suggest\GrowthSuggestionPromptTemplate;
 use App\Services\Ai\Tools\Suggest\ServiceSuggestionPromptTemplate;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,5 +29,7 @@ class AppServiceProvider extends ServiceProvider
         $registry->register(new DcpPromptTemplate);
         $registry->register(new ServiceSuggestionPromptTemplate);
         $registry->register(new BrandingSuggestionPromptTemplate);
+        $registry->register(new ContentSocialSuggestionPromptTemplate);
+        $registry->register(new GrowthSuggestionPromptTemplate);
     }
 }

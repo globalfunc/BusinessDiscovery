@@ -1,7 +1,7 @@
-import { Sparkles } from 'lucide-react';
-
+import { AcceptedSuggestionList, type AcceptedSuggestionCard } from '@/components/discovery/AcceptedSuggestionList';
 import { SelectableCard } from '@/components/discovery/SelectableCard';
-import { Button } from '@/components/ui/button';
+import type { SuggestionCardData } from '@/components/discovery/SuggestionCard';
+import { SuggestionPanel } from '@/components/discovery/SuggestionPanel';
 import { useAutosaveField } from '@/hooks/useAutosaveField';
 
 const MODULES = [
@@ -52,11 +52,59 @@ export function Phase5GrowthOperations({ t, answers }: Props) {
     );
     const adminOpsOptions = useAutosaveField<string[]>('phase_5', 'admin_ops_options', toStringArray(answers.admin_ops_options));
 
+    // Accepted growth ideas persist per module (each ✨ call is module-scoped),
+    // as a jsonb `{module}_accepted_suggestions` structured answer with notes (§6.3).
+    const toAccepted = (value: unknown): AcceptedSuggestionCard[] =>
+        Array.isArray(value) ? (value as AcceptedSuggestionCard[]) : [];
+    const notificationsAccepted = useAutosaveField<AcceptedSuggestionCard[]>(
+        'phase_5',
+        'notifications_accepted_suggestions',
+        toAccepted(answers.notifications_accepted_suggestions),
+    );
+    const marketingAccepted = useAutosaveField<AcceptedSuggestionCard[]>(
+        'phase_5',
+        'marketing_accepted_suggestions',
+        toAccepted(answers.marketing_accepted_suggestions),
+    );
+    const leadgenAccepted = useAutosaveField<AcceptedSuggestionCard[]>(
+        'phase_5',
+        'leadgen_accepted_suggestions',
+        toAccepted(answers.leadgen_accepted_suggestions),
+    );
+    const adminOpsAccepted = useAutosaveField<AcceptedSuggestionCard[]>(
+        'phase_5',
+        'admin_ops_accepted_suggestions',
+        toAccepted(answers.admin_ops_accepted_suggestions),
+    );
+
     const optionsByModule: Record<string, ReturnType<typeof useAutosaveField<string[]>>> = {
         notifications: notificationOptions,
         marketing: marketingOptions,
         leadgen: leadgenOptions,
         admin_ops: adminOpsOptions,
+    };
+
+    const acceptedByModule: Record<string, ReturnType<typeof useAutosaveField<AcceptedSuggestionCard[]>>> = {
+        notifications: notificationsAccepted,
+        marketing: marketingAccepted,
+        leadgen: leadgenAccepted,
+        admin_ops: adminOpsAccepted,
+    };
+
+    const acceptSuggestion = (field: ReturnType<typeof useAutosaveField<AcceptedSuggestionCard[]>>, card: SuggestionCardData) => {
+        field.setValue([...field.value, { ...card, note: '' }]);
+    };
+
+    const updateAcceptedNote = (
+        field: ReturnType<typeof useAutosaveField<AcceptedSuggestionCard[]>>,
+        index: number,
+        note: string,
+    ) => {
+        field.setValue(field.value.map((c, i) => (i === index ? { ...c, note } : c)));
+    };
+
+    const removeAccepted = (field: ReturnType<typeof useAutosaveField<AcceptedSuggestionCard[]>>, index: number) => {
+        field.setValue(field.value.filter((_, i) => i !== index));
     };
 
     const toggleModule = (key: string) => {
@@ -76,6 +124,7 @@ export function Phase5GrowthOperations({ t, answers }: Props) {
             {MODULES.map(({ key: moduleKey, optionKeys }) => {
                 const isEnabled = enabledModules.value.includes(moduleKey);
                 const optionsField = optionsByModule[moduleKey];
+                const acceptedField = acceptedByModule[moduleKey];
 
                 return (
                     <div key={moduleKey} className="flex flex-col gap-3 rounded-md border border-line bg-surface-2 p-4">
@@ -88,24 +137,20 @@ export function Phase5GrowthOperations({ t, answers }: Props) {
 
                         {isEnabled && (
                             <div className="flex flex-col gap-3 pl-1">
-                                <div className="flex items-start justify-between gap-3">
-                                    <p className="font-ui text-xs font-semibold uppercase tracking-wide text-text-muted">
-                                        {t('phase5.enableToggleLabel')}
-                                    </p>
-                                    <Button
-                                        type="button"
-                                        variant="secondary"
-                                        size="sm"
-                                        disabled
-                                        className="shrink-0 gap-1.5 border-accent/40 text-accent"
-                                    >
-                                        <Sparkles className="h-3.5 w-3.5" />
-                                        {t(`phase5.modules.${moduleKey}.aiSuggestionsCta`)}
-                                    </Button>
-                                </div>
-                                <p className="-mt-2 font-body text-xs text-text-faint">
-                                    {t(`phase5.modules.${moduleKey}.aiSuggestionsComingSoon`)}
-                                </p>
+                                <SuggestionPanel
+                                    t={t}
+                                    endpoint={route('discovery.suggest.growth', { module: moduleKey })}
+                                    ctaLabel={t(`phase5.modules.${moduleKey}.aiSuggestionsCta`)}
+                                    onAccept={(card) => acceptSuggestion(acceptedField, card)}
+                                />
+
+                                <AcceptedSuggestionList
+                                    t={t}
+                                    heading={t('phase5.acceptedIdeasHeading')}
+                                    cards={acceptedField.value}
+                                    onNoteChange={(index, note) => updateAcceptedNote(acceptedField, index, note)}
+                                    onRemove={(index) => removeAccepted(acceptedField, index)}
+                                />
 
                                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                                     {optionKeys.map((optionKey) => (

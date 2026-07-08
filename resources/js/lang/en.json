@@ -221,7 +221,8 @@
             "interested": "Yes, interested",
             "maybe": "Maybe / tell me more",
             "not_interested": "Not interested"
-        }
+        },
+        "acceptedIdeasHeading": "Ideas you've added"
     },
     "phase5": {
         "modules": {
@@ -280,7 +281,8 @@
                 }
             }
         },
-        "enableToggleLabel": "Include this module"
+        "enableToggleLabel": "Include this module",
+        "acceptedIdeasHeading": "Ideas you've added"
     },
     "phase6": {
         "approxTotalLabel": "Approx. total",

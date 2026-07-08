@@ -53,6 +53,12 @@ return [
         'suggest.branding' => [
             'max_tokens' => 3072,
         ],
+        'suggest.content_social' => [
+            'max_tokens' => 3072,
+        ],
+        'suggest.growth' => [
+            'max_tokens' => 3072,
+        ],
     ],
 
     /*

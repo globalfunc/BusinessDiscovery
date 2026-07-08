@@ -99,13 +99,18 @@ class SuggestionGenerationTest extends TestCase
 
     private function postSuggest(string $tool)
     {
+        return $this->postSuggestRoute(route("discovery.suggest.{$tool}"));
+    }
+
+    private function postSuggestRoute(string $url)
+    {
         $referralToken = ReferralToken::factory()->create(['business_owner_id' => $this->businessOwner->id]);
 
         return $this->withSession([
             'referral_token_id' => $referralToken->id,
             'business_owner_id' => $this->businessOwner->id,
             'referral_confirmed_'.$referralToken->id => true,
-        ])->postJson(route("discovery.suggest.{$tool}"));
+        ])->postJson($url);
     }
 
     public function test_valid_service_cards_are_returned(): void
@@ -263,6 +268,88 @@ class SuggestionGenerationTest extends TestCase
 
         $response->assertJsonPath('status', 'unavailable');
         $response->assertJsonPath('suggestions.0.title', 'Preset Direction');
+    }
+
+    public function test_content_social_endpoint_returns_cards(): void
+    {
+        $cards = [
+            $this->brandingCard(['title' => 'Monthly Content Pack']),
+            $this->brandingCard(['title' => 'Local Reach Sprint']),
+            $this->brandingCard(['title' => 'Review Engine']),
+        ];
+
+        $this->fakeAiClient(successful: true, text: json_encode(['suggestions' => $cards]));
+
+        $response = $this->postSuggest('content_social');
+
+        $response->assertOk();
+        $response->assertJsonPath('status', 'ok');
+        $response->assertJsonCount(3, 'suggestions');
+    }
+
+    public function test_content_social_failure_falls_back_to_phase4_presets(): void
+    {
+        SuggestionPreset::factory()->create([
+            'taxonomy_niche_id' => $this->niche->id,
+            'phase' => DiscoveryPhase::Phase4->value,
+            'cards' => [$this->brandingCard(['title' => 'Preset Content Pack'])],
+        ]);
+
+        $this->fakeAiClient(successful: false, text: null, status: AiCallStatus::Failed);
+
+        $response = $this->postSuggest('content_social');
+
+        $response->assertJsonPath('status', 'unavailable');
+        $response->assertJsonPath('suggestions.0.title', 'Preset Content Pack');
+    }
+
+    public function test_growth_endpoint_returns_cards_per_module(): void
+    {
+        $cards = [
+            $this->brandingCard(['title' => 'Appointment Reminders']),
+            $this->brandingCard(['title' => 'Follow-up Nudges']),
+            $this->brandingCard(['title' => 'Confirmation Flow']),
+        ];
+
+        $this->fakeAiClient(successful: true, text: json_encode(['suggestions' => $cards]));
+
+        $response = $this->postSuggestRoute(route('discovery.suggest.growth', ['module' => 'notifications']));
+
+        $response->assertOk();
+        $response->assertJsonPath('status', 'ok');
+        $response->assertJsonCount(3, 'suggestions');
+    }
+
+    public function test_growth_accepts_each_valid_module(): void
+    {
+        $cards = [$this->brandingCard(), $this->brandingCard(['title' => 'B']), $this->brandingCard(['title' => 'C'])];
+        $this->fakeAiClient(successful: true, text: json_encode(['suggestions' => $cards]));
+
+        foreach (['notifications', 'marketing', 'leadgen', 'admin_ops'] as $module) {
+            $this->postSuggestRoute(route('discovery.suggest.growth', ['module' => $module]))
+                ->assertJsonPath('status', 'ok');
+        }
+    }
+
+    public function test_growth_rejects_unknown_module(): void
+    {
+        $this->postSuggestRoute(route('discovery.suggest.growth', ['module' => 'bogus']))->assertNotFound();
+    }
+
+    public function test_growth_failure_falls_back_to_phase5_presets(): void
+    {
+        SuggestionPreset::factory()->create([
+            'taxonomy_niche_id' => $this->niche->id,
+            'phase' => DiscoveryPhase::Phase5->value,
+            'cards' => [$this->brandingCard(['title' => 'Preset Growth Idea'])],
+        ]);
+
+        $this->fakeAiClient(successful: false, text: null, status: AiCallStatus::Failed);
+
+        $response = $this->postSuggestRoute(route('discovery.suggest.growth', ['module' => 'marketing']));
+
+        $response->assertJsonPath('status', 'unavailable');
+        $response->assertJsonPath('suggestions.0.title', 'Preset Growth Idea');
     }
 
     /**

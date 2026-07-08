@@ -7,6 +7,8 @@ use App\Models\BusinessOwner;
 use App\Models\DiscoverySession;
 use App\Services\Ai\Tools\Suggest\AbstractSuggestionAssembler;
 use App\Services\Ai\Tools\Suggest\BrandingSuggestionAssembler;
+use App\Services\Ai\Tools\Suggest\ContentSocialSuggestionAssembler;
+use App\Services\Ai\Tools\Suggest\GrowthSuggestionAssembler;
 use App\Services\Ai\Tools\Suggest\ServiceSuggestionAssembler;
 use App\Services\Ai\Tools\Suggest\SuggestionGenerator;
 use App\Services\Ai\Tools\Suggest\SuggestionResult;
@@ -51,6 +53,45 @@ class SuggestionController extends Controller
         );
 
         return $this->respond($result, $assembler, $session);
+    }
+
+    public function contentSocial(Request $request, SuggestionGenerator $generator, ContentSocialSuggestionAssembler $assembler): JsonResponse
+    {
+        [$businessOwner, $session] = $this->context($request);
+
+        $result = $generator->generate(
+            tool: 'suggest.content_social',
+            assembler: $assembler,
+            validator: new SuggestionSchemaValidator(requireCatalogKey: false),
+            businessOwner: $businessOwner,
+            discoverySession: $session,
+        );
+
+        return $this->respond($result, $assembler, $session);
+    }
+
+    /**
+     * Phase 5 fires one call per enabled module (§3.6), so the module is a
+     * route param and the assembler is scoped to it. An unknown module 404s
+     * rather than falling through — the frontend only ever posts known keys.
+     */
+    public function growth(Request $request, string $module, SuggestionGenerator $generator, GrowthSuggestionAssembler $assembler): JsonResponse
+    {
+        abort_unless(in_array($module, GrowthSuggestionAssembler::modules(), true), 404);
+
+        [$businessOwner, $session] = $this->context($request);
+
+        $scoped = $assembler->withModule($module);
+
+        $result = $generator->generate(
+            tool: 'suggest.growth',
+            assembler: $scoped,
+            validator: new SuggestionSchemaValidator(requireCatalogKey: false),
+            businessOwner: $businessOwner,
+            discoverySession: $session,
+        );
+
+        return $this->respond($result, $scoped, $session);
     }
 
     private function respond(SuggestionResult $result, AbstractSuggestionAssembler $assembler, DiscoverySession $session): JsonResponse

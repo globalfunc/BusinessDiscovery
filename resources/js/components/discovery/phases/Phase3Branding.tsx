@@ -1,18 +1,13 @@
-import { X } from 'lucide-react';
 import { useState } from 'react';
 
+import { AcceptedSuggestionList, type AcceptedSuggestionCard } from '@/components/discovery/AcceptedSuggestionList';
 import { ColorPreferences } from '@/components/discovery/ColorPreferences';
 import { ReferenceLinksWithNotes, type ReferenceLinkNote } from '@/components/discovery/ReferenceLinksWithNotes';
 import { SelectableCard } from '@/components/discovery/SelectableCard';
 import type { SuggestionCardData } from '@/components/discovery/SuggestionCard';
 import { SuggestionPanel } from '@/components/discovery/SuggestionPanel';
 import { UploadZone, type UploadRecord } from '@/components/discovery/UploadZone';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { useAutosaveField } from '@/hooks/useAutosaveField';
-
-/** An accepted brand-direction card, persisted with the BO's own note (§6.3). */
-type AcceptedBrandingCard = SuggestionCardData & { note: string };
 
 const STYLE_CHIP_KEYS = [
     'modern',
@@ -42,7 +37,7 @@ export function Phase3Branding({ t, answers, hasLogo, initialUploads, initialQuo
     const initialColorCustomHex = typeof answers.color_custom_hex === 'string' ? answers.color_custom_hex : null;
     const initialReferenceLinks = Array.isArray(answers.reference_links) ? (answers.reference_links as ReferenceLinkNote[]) : [];
     const initialAcceptedSuggestions = Array.isArray(answers.accepted_suggestions)
-        ? (answers.accepted_suggestions as AcceptedBrandingCard[])
+        ? (answers.accepted_suggestions as AcceptedSuggestionCard[])
         : [];
 
     const styleChips = useAutosaveField<string[]>('phase_3', 'style_chips', initialStyleChips);
@@ -52,7 +47,7 @@ export function Phase3Branding({ t, answers, hasLogo, initialUploads, initialQuo
     // Accepted brand directions persist as a structured answer (no dedicated
     // table — brand directions aren't catalog services); each keeps its own
     // free-text note (§6.3), autosaved as a jsonb array.
-    const acceptedSuggestions = useAutosaveField<AcceptedBrandingCard[]>('phase_3', 'accepted_suggestions', initialAcceptedSuggestions);
+    const acceptedSuggestions = useAutosaveField<AcceptedSuggestionCard[]>('phase_3', 'accepted_suggestions', initialAcceptedSuggestions);
 
     const acceptSuggestion = (card: SuggestionCardData) => {
         acceptedSuggestions.setValue([...acceptedSuggestions.value, { ...card, note: '' }]);
@@ -139,52 +134,13 @@ export function Phase3Branding({ t, answers, hasLogo, initialUploads, initialQuo
                 onAccept={acceptSuggestion}
             />
 
-            {acceptedSuggestions.value.length > 0 && (
-                <div className="flex flex-col gap-3">
-                    <p className="font-ui text-xs font-semibold uppercase tracking-wide text-text-muted">
-                        {t('phase3.acceptedDirectionsHeading')}
-                    </p>
-                    {acceptedSuggestions.value.map((card, index) => (
-                        <div key={index} className="flex flex-col gap-2 rounded-bo border border-transparent bg-surface p-4 shadow-[0_0_0_1.5px_var(--lb-accent-glow)]">
-                            <div className="flex items-start justify-between gap-2">
-                                <div className="flex flex-col gap-0.5">
-                                    <span className="font-ui text-sm font-semibold text-text">{card.title}</span>
-                                    {card.summary && <span className="font-body text-xs text-text-muted">{card.summary}</span>}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    {card.tags.slice(0, 2).map((tag) => (
-                                        <Badge key={tag} variant="muted">
-                                            {tag.replace(/_/g, ' ')}
-                                        </Badge>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={() => removeAccepted(index)}
-                                        aria-label={t('phase2.remove')}
-                                        className="flex h-8 w-8 items-center justify-center rounded-md border border-line-strong text-text-faint hover:border-red/40 hover:text-red"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            </div>
-                            {card.features.length > 0 && (
-                                <ul className="flex flex-col gap-1 font-body text-xs text-text-muted">
-                                    {card.features.map((feature, i) => (
-                                        <li key={i}>• {feature}</li>
-                                    ))}
-                                </ul>
-                            )}
-                            <Textarea
-                                value={card.note}
-                                onChange={(e) => updateAcceptedNote(index, e.target.value)}
-                                placeholder={t('suggestions.notePlaceholder')}
-                                rows={2}
-                                className="text-xs"
-                            />
-                        </div>
-                    ))}
-                </div>
-            )}
+            <AcceptedSuggestionList
+                t={t}
+                heading={t('phase3.acceptedDirectionsHeading')}
+                cards={acceptedSuggestions.value}
+                onNoteChange={updateAcceptedNote}
+                onRemove={removeAccepted}
+            />
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {STYLE_CHIP_KEYS.map((key) => (

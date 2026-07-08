@@ -77,6 +77,8 @@ Route::middleware(['discovery.access'])->prefix('discovery')->name('discovery.')
     Route::post('/submit', [DiscoveryController::class, 'submit'])->name('submit');
     Route::post('/suggest/services', [SuggestionController::class, 'services'])->name('suggest.services');
     Route::post('/suggest/branding', [SuggestionController::class, 'branding'])->name('suggest.branding');
+    Route::post('/suggest/content-social', [SuggestionController::class, 'contentSocial'])->name('suggest.content_social');
+    Route::post('/suggest/growth/{module}', [SuggestionController::class, 'growth'])->name('suggest.growth');
     Route::post('/services', [SelectedServiceController::class, 'store'])->name('services.store');
     Route::patch('/services/{selectedService}', [SelectedServiceController::class, 'update'])->name('services.update');
     Route::delete('/services/{selectedService}', [SelectedServiceController::class, 'destroy'])->name('services.destroy');

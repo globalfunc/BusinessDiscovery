@@ -1,8 +1,8 @@
-import { Sparkles } from 'lucide-react';
-
+import { AcceptedSuggestionList, type AcceptedSuggestionCard } from '@/components/discovery/AcceptedSuggestionList';
 import { ChipInput } from '@/components/discovery/ChipInput';
 import { SelectableCard } from '@/components/discovery/SelectableCard';
-import { Button } from '@/components/ui/button';
+import type { SuggestionCardData } from '@/components/discovery/SuggestionCard';
+import { SuggestionPanel } from '@/components/discovery/SuggestionPanel';
 import { useAutosaveField } from '@/hooks/useAutosaveField';
 
 const CONTENT_NEED_KEYS = ['copywriting', 'photo_video', 'menu_pricelist', 'multilingual', 'blog_news'] as const;
@@ -33,6 +33,25 @@ export function Phase4ContentSocial({ t, answers }: Props) {
         'content_assist_interest',
         typeof answers.content_assist_interest === 'string' ? answers.content_assist_interest : null,
     );
+    // Accepted content/social plays persist as a structured answer (no catalog
+    // link — they aren't selected services); each keeps its own note (§6.3).
+    const acceptedSuggestions = useAutosaveField<AcceptedSuggestionCard[]>(
+        'phase_4',
+        'accepted_suggestions',
+        Array.isArray(answers.accepted_suggestions) ? (answers.accepted_suggestions as AcceptedSuggestionCard[]) : [],
+    );
+
+    const acceptSuggestion = (card: SuggestionCardData) => {
+        acceptedSuggestions.setValue([...acceptedSuggestions.value, { ...card, note: '' }]);
+    };
+
+    const updateAcceptedNote = (index: number, note: string) => {
+        acceptedSuggestions.setValue(acceptedSuggestions.value.map((c, i) => (i === index ? { ...c, note } : c)));
+    };
+
+    const removeAccepted = (index: number) => {
+        acceptedSuggestions.setValue(acceptedSuggestions.value.filter((_, i) => i !== index));
+    };
 
     const toggle = (field: ReturnType<typeof useAutosaveField<string[]>>, key: string) => {
         field.setValue(field.value.includes(key) ? field.value.filter((k) => k !== key) : [...field.value, key]);
@@ -40,14 +59,22 @@ export function Phase4ContentSocial({ t, answers }: Props) {
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex items-start justify-between gap-3">
-                <p className="font-ui text-xs font-semibold uppercase tracking-wide text-text-muted">{t('phase4.contentHeading')}</p>
-                <Button type="button" variant="secondary" size="sm" disabled className="shrink-0 gap-1.5 border-accent/40 text-accent">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    {t('phase4.aiSuggestionsCta')}
-                </Button>
-            </div>
-            <p className="-mt-4 font-body text-xs text-text-faint">{t('phase4.aiSuggestionsComingSoon')}</p>
+            <p className="font-ui text-xs font-semibold uppercase tracking-wide text-text-muted">{t('phase4.contentHeading')}</p>
+
+            <SuggestionPanel
+                t={t}
+                endpoint={route('discovery.suggest.content_social')}
+                ctaLabel={t('phase4.aiSuggestionsCta')}
+                onAccept={acceptSuggestion}
+            />
+
+            <AcceptedSuggestionList
+                t={t}
+                heading={t('phase4.acceptedIdeasHeading')}
+                cards={acceptedSuggestions.value}
+                onNoteChange={updateAcceptedNote}
+                onRemove={removeAccepted}
+            />
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {CONTENT_NEED_KEYS.map((key) => (
