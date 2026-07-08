@@ -26,6 +26,8 @@ class IntakeController extends Controller
 
         $session = DiscoverySession::where('business_owner_id', $businessOwner->id)->firstOrFail();
 
+        abort_if($session->status === 'submitted', 403, 'This discovery has already been submitted.');
+
         $generator->generate($businessOwner, $session);
 
         if ($session->current_phase === DiscoveryPhase::Phase0) {

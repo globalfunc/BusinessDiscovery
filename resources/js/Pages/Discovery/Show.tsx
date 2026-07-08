@@ -188,7 +188,7 @@ export default function DiscoveryShow({
                 </DialogContent>
             </Dialog>
 
-            {isReview && isSubmitted ? (
+            {isSubmitted ? (
                 <div className="flex flex-col gap-3 rounded-bo border border-line bg-surface p-6 text-center">
                     <p className="eyebrow text-teal">{t('common.review')}</p>
                     <h1 className="font-display text-2xl font-semibold text-text">

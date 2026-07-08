@@ -64,6 +64,8 @@ class SpecController extends Controller
 
         $session = DiscoverySession::where('business_owner_id', $businessOwner->id)->firstOrFail();
 
+        abort_if($session->status === 'submitted', 403, 'This discovery has already been submitted.');
+
         return [$businessOwner, $session];
     }
 }

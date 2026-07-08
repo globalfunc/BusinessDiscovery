@@ -28,6 +28,8 @@ class UploadController extends Controller
         $businessOwner = $request->attributes->get('businessOwner');
         $session = $this->currentSession($request);
 
+        abort_if($session->status === 'submitted', 403, 'This discovery has already been submitted.');
+
         $data = $request->validate([
             'file' => ['required', 'file', 'max:'.(self::MAX_FILE_BYTES / 1024), 'mimes:csv,xlsx,pdf,docx,txt,png,jpg,jpeg,webp,svg'],
         ]);
@@ -76,6 +78,7 @@ class UploadController extends Controller
         $businessOwner = $request->attributes->get('businessOwner');
 
         abort_unless($upload->business_owner_id === $businessOwner->id, 403);
+        abort_if($this->currentSession($request)->status === 'submitted', 403, 'This discovery has already been submitted.');
 
         Storage::disk('local')->delete(array_filter([$upload->path, $upload->thumb_path]));
         $upload->delete();

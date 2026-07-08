@@ -24,6 +24,8 @@ class SelectedServiceController extends Controller
     {
         $session = $this->currentSession($request);
 
+        abort_if($session->status === 'submitted', 403, 'This discovery has already been submitted.');
+
         $data = $request->validate([
             'service_id' => ['nullable', 'integer', 'exists:services,id'],
             'origin' => ['nullable', 'in:catalog,bo_custom,ai_suggestion'],
@@ -113,5 +115,6 @@ class SelectedServiceController extends Controller
         $session = $this->currentSession($request);
 
         abort_unless($selectedService->discovery_session_id === $session->id, 403);
+        abort_if($session->status === 'submitted', 403, 'This discovery has already been submitted.');
     }
 }

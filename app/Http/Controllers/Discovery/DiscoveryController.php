@@ -48,12 +48,20 @@ class DiscoveryController extends Controller
         $currentIndex = array_search($session->current_phase, $ordered, true);
 
         if ($phase === null) {
-            return redirect()->route('discovery.show', ['phase' => $session->current_phase->value]);
+            $landingPhase = $session->status === 'submitted' ? DiscoveryPhase::Review->value : $session->current_phase->value;
+
+            return redirect()->route('discovery.show', ['phase' => $landingPhase]);
         }
 
         $targetPhase = DiscoveryPhase::tryFrom($phase);
         if ($targetPhase === null) {
             return redirect()->route('discovery.show', ['phase' => $session->current_phase->value]);
+        }
+
+        // Once submitted the flow is locked read-only: any phase URL bounces
+        // to Review rather than re-rendering the editable phase UI (§3.8).
+        if ($session->status === 'submitted' && $targetPhase !== DiscoveryPhase::Review) {
+            return redirect()->route('discovery.show', ['phase' => DiscoveryPhase::Review->value]);
         }
 
         $targetIndex = array_search($targetPhase, $ordered, true);
@@ -368,6 +376,8 @@ class DiscoveryController extends Controller
 
         $session = DiscoverySession::where('business_owner_id', $businessOwner->id)->firstOrFail();
 
+        abort_if($session->status === 'submitted', 403, 'This discovery has already been submitted.');
+
         $answer = $session->answers()->updateOrCreate(
             ['phase' => $data['phase'], 'field_key' => $data['field_key']],
             ['value' => $data['value'] ?? null],
@@ -393,6 +403,8 @@ class DiscoveryController extends Controller
         ]);
 
         $session = DiscoverySession::where('business_owner_id', $businessOwner->id)->firstOrFail();
+
+        abort_if($session->status === 'submitted', 403, 'This discovery has already been submitted.');
 
         $ordered = DiscoveryPhase::ordered();
         $targetPhase = DiscoveryPhase::from($data['to']);
@@ -426,6 +438,11 @@ class DiscoveryController extends Controller
         $referralToken = $request->attributes->get('referralToken');
 
         $session = DiscoverySession::where('business_owner_id', $businessOwner->id)->firstOrFail();
+
+        if ($session->status === 'submitted') {
+            // Already submitted — idempotent no-op, just land back on Review.
+            return redirect()->route('discovery.show', ['phase' => DiscoveryPhase::Review->value]);
+        }
 
         $session->update(['status' => 'submitted', 'submitted_at' => now()]);
         $referralToken->update(['state' => ReferralTokenState::Submitted]);
