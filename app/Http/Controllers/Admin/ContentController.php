@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\DiscoveryPhase;
 use App\Http\Controllers\Controller;
+use App\Models\PhaseCopyOverride;
 use App\Models\Service;
 use App\Models\Setting;
+use App\Models\SuggestionPreset;
 use App\Models\TaxonomyCategory;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -49,10 +52,43 @@ class ContentController extends Controller
                 'recommended_niche_ids' => $service->niches->filter(fn ($n) => $n->pivot->recommended)->pluck('id'),
             ]);
 
+        $suggestionPresets = SuggestionPreset::query()
+            ->with('niche:id,name')
+            ->orderBy('phase')
+            ->get()
+            ->map(fn (SuggestionPreset $preset) => [
+                'id' => $preset->id,
+                'phase' => $preset->phase,
+                'niche' => ['id' => $preset->niche->id, 'name' => $preset->niche->name],
+                'cards' => $preset->cards,
+            ]);
+
+        $phaseCopyOverrides = PhaseCopyOverride::query()->get();
+
+        $phaseCopy = [];
+        foreach (PhaseCopyOverride::phases() as $phase) {
+            foreach (['bg', 'en'] as $language) {
+                $row = $phaseCopyOverrides->first(fn (PhaseCopyOverride $o) => $o->phase === $phase && $o->language === $language);
+                $phaseCopy[] = [
+                    'phase' => $phase,
+                    'language' => $language,
+                    'title' => $row?->title,
+                    'helper' => $row?->helper,
+                    'body' => $row?->body,
+                ];
+            }
+        }
+
         return Inertia::render('Admin/Content/Index', [
             'categories' => $categories,
             'services' => $services,
             'showPricesToBo' => (bool) (Setting::query()->where('key', 'show_prices_to_bo')->first()?->value['enabled'] ?? false),
+            'suggestionPresets' => $suggestionPresets,
+            'presetPhases' => SuggestionPresetController::presetPhases(),
+            'phaseCopy' => $phaseCopy,
+            'phaseLabels' => collect(DiscoveryPhase::ordered())
+                ->mapWithKeys(fn (DiscoveryPhase $p) => [$p->value => $p->label()])
+                ->put(PhaseCopyOverride::GREETING, 'Greeting (referral landing page)'),
         ]);
     }
 }

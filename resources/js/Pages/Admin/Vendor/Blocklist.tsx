@@ -209,6 +209,15 @@ export default function VendorBlocklist({
     terms: Term[];
     defaultReplacement: string;
 }) {
+    const [search, setSearch] = useState('');
+    const query = search.trim().toLowerCase();
+    const filtered = query
+        ? terms.filter(
+              (term) =>
+                  term.term.toLowerCase().includes(query) || (term.category ?? '').toLowerCase().includes(query),
+          )
+        : terms;
+
     return (
         <AdminLayout>
             <Head title="Vendor blocklist" />
@@ -223,11 +232,23 @@ export default function VendorBlocklist({
                 </p>
             </section>
 
-            <div className="mt-6 flex items-center justify-between">
+            <div className="mt-6 flex items-center justify-between gap-4">
                 <h2 className="font-display text-xl font-semibold text-text">
-                    Terms <span className="font-body text-sm text-text-faint">({terms.length})</span>
+                    Terms{' '}
+                    <span className="font-body text-sm text-text-faint">
+                        ({filtered.length}
+                        {filtered.length !== terms.length ? ` of ${terms.length}` : ''})
+                    </span>
                 </h2>
-                <AddTermDialog defaultReplacement={defaultReplacement} />
+                <div className="flex items-center gap-2">
+                    <Input
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search term or category…"
+                        className="w-56"
+                    />
+                    <AddTermDialog defaultReplacement={defaultReplacement} />
+                </div>
             </div>
 
             <div className="mt-4 overflow-hidden rounded-admin border border-line bg-surface">
@@ -242,14 +263,14 @@ export default function VendorBlocklist({
                         </tr>
                     </thead>
                     <tbody>
-                        {terms.length === 0 && (
+                        {filtered.length === 0 && (
                             <tr>
                                 <td colSpan={5} className="px-4 py-8 text-center text-text-faint">
-                                    No blocklist terms yet.
+                                    {terms.length === 0 ? 'No blocklist terms yet.' : 'No terms match your search.'}
                                 </td>
                             </tr>
                         )}
-                        {terms.map((term) => (
+                        {filtered.map((term) => (
                             <tr key={term.id} className="border-b border-line last:border-0 hover:bg-surface-2">
                                 <td className="px-4 py-3">
                                     <span className="font-ui font-medium text-text">{term.term}</span>

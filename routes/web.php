@@ -3,12 +3,14 @@
 use App\Http\Controllers\Admin\BusinessOwnerController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PhaseCopyOverrideController;
 use App\Http\Controllers\Admin\PipelineController;
 use App\Http\Controllers\Admin\ProposalBuilderController;
 use App\Http\Controllers\Admin\ReferralTokenController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SpecReviewController;
+use App\Http\Controllers\Admin\SuggestionPresetController;
 use App\Http\Controllers\Admin\TaxonomyCategoryController;
 use App\Http\Controllers\Admin\TaxonomyNicheController;
 use App\Http\Controllers\Admin\VendorBlocklistController;
@@ -77,6 +79,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::patch('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
 
         Route::patch('/settings/{key}', [SettingController::class, 'update'])->name('settings.update');
+
+        Route::post('/suggestion-presets', [SuggestionPresetController::class, 'store'])->name('suggestion-presets.store');
+        Route::patch('/suggestion-presets/{suggestionPreset}', [SuggestionPresetController::class, 'update'])->name('suggestion-presets.update');
+        Route::delete('/suggestion-presets/{suggestionPreset}', [SuggestionPresetController::class, 'destroy'])->name('suggestion-presets.destroy');
+
+        Route::patch('/phase-copy/{phase}/{language}', [PhaseCopyOverrideController::class, 'update'])->name('phase-copy.update');
     });
 
     Route::prefix('vendor-blocklist')->name('vendor-blocklist.')->group(function () {
