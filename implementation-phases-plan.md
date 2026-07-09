@@ -180,18 +180,18 @@ Technical_Specification.md §1.3 lists "public signup, marketing site, or SEO" a
 ### S4.4 — Spec review & decision-surface UI **[Sonnet]**
 - Rendered spec preview (reusing the BO-side renderer), raw markdown view, version diff list, scannable chip/card decision surface (services+features, billing, budget, timeline, branding directions) per §6.4.
 
-### S4.5 — Proposal & assessment generators **[Fable · complex]**
-- `proposal.generate` and `assessment.generate` tools (spec + admin notes → draft markdown), markdown editor for admin refinement, asset attachment, versioning, internal-only assessment mode (never shown to BO), upload-external-proposal alternative path.
+### S4.5 — Proposal, assessment & email generators **[Fable · complex]**
+- **Assessment before proposal, in that order — proposal takes the assessment as input.** `assessment.generate` (admin-only, never shown to BO) drafts the developer-facing document from spec + DCP + admin notes: suggested tech stack, integrations (off-the-shelf platform vs. custom build, with relative effort/cost per path), infra needs, implementation plan, effort/complexity notes, suggested pricing bands. Admin reviews/edits it first — this edited version is what pricing is grounded in. `proposal.generate` then drafts the client-facing document from spec + DCP **and the (possibly edited) assessment**, not from the spec alone: services + included features/functionality, billing model, budget, timeline — no tech stack/infra/implementation detail. This ordering means `proposal.generate` should be disabled/unavailable until an assessment exists for the BO.
+- `email.generate` (Warm tease / Follow-up / Proposal cover, BG/EN) is independent of the above two and can be generated any time from BO context + spec.
+- All three tools share one generation pipeline (context assembly → `AiClient` → versioned draft). Markdown editor for admin refinement of proposal/assessment drafts using **`@uiw/react-md-editor`** (battle-tested, MIT — don't hand-roll a markdown editor); copy-to-clipboard editor UI for emails. Asset attachment, versioning, upload-external-proposal alternative path. No email sending (manual only, per non-goals).
+- **Vendor filter does NOT apply to these three tools** — unlike every BO-facing tool (`suggest.*`, `dcp.generate`, `spec.compile`/`spec.amend`), these are admin-authored drafts with a human-in-the-loop edit pass before anything reaches the BO (assessment never reaches the BO at all), so the §7.6 neutrality rule would only hide useful information. The admin explicitly wants comparisons like "integrate with existing Shopify/WooCommerce vs. custom build" with suggested pricing/effort for each path. Implement as a per-tool opt-out: `ai.tools.<tool>.vendor_filter => false` read by `AiClient::call()` (`app/Services/Ai/AiClient.php`) before the §7.6 scan, and prompt templates for these three tools should invite naming real platforms/vendors for comparison rather than injecting `VendorPolicy::systemRule()`.
 - PDF export is **not** in this session — moved to Stage 5 (S5.5) per §0.1; leave the export button as a disabled/"coming soon" affordance here if convenient, but don't build the renderer yet.
-- **Depends on:** S3.5 (spec markdown), S3.4 (must pass through the same vendor filter).
+- **Depends on:** S3.5 (spec markdown). Does *not* depend on S3.4's vendor filter being applied to its own output (see above) — S3.4's blocklist/redaction machinery is simply not invoked for these tools.
 
-### S4.6 — Email content generators **[Fable · complex]**
-- `email.generate` tool: Warm tease / Follow-up / Proposal cover, BG/EN, from BO context + spec, copy-to-clipboard editor UI. No sending (manual only, per non-goals).
-
-### S4.7 — Content & funnel management screens **[Sonnet]**
+### S4.6 — Content & funnel management screens **[Sonnet]**
 - Suggestion-presets editor (per niche/phase), phase-copy overrides (titles/helper text/greeting templates per language), deepen the S1.4 taxonomy/service editors as needed, vendor blocklist editor polish (pairs with S3.4 backend).
 
-### S4.8 — AI & system settings **[Sonnet]**
+### S4.7 — AI & system settings **[Sonnet]**
 - Model/token/temperature/effort config screens, global+per-BO budget & alert-threshold settings, usage explorer (per period/BO/call-type with token counts and cost estimates against a configurable price table), prompt template viewer/editor with version history and "reset to default."
 - **Stage 4 exit criteria:** operator can run the full lifecycle — provision a BO, watch them through the pipeline, review/amend their spec, generate a proposal and outreach emails, and monitor AI cost — entirely from the admin portal.
 
@@ -270,9 +270,9 @@ Not part of the closed discovery flow — this is the unauthenticated `/` route 
 | 1 | 5 | 5 | – | – |
 | 2 | 6 | 6 | – | – |
 | 3 | 8 | 3 | 3 | 2 |
-| 4 | 8 | 6 | – | 2 |
+| 4 | 7 | 6 | – | 1 |
 | 5 | 7 | 5 | 1 | 1 |
 | 6 | 3 | 3 | – | – |
-| **Total** | **38** | **29** | **4** | **5** |
+| **Total** | **37** | **29** | **4** | **4** |
 
-Fable 5 carries the onboarding interview + AI discovery suggestion sessions (S3.1–S3.3, plus the S5.6 advisory-brief add-on) plus five flagged high-complexity sessions (vendor-safety filtering S3.4, generative spec/proposal assembly S3.5/S4.5, email generation S4.6, brief-quality grading & eval S5.7). Everything else — scaffolding, CRUD, admin UI, infra, tests — runs on the current model at medium effort.
+Fable 5 carries the onboarding interview + AI discovery suggestion sessions (S3.1–S3.3, plus the S5.6 advisory-brief add-on) plus four flagged high-complexity sessions (vendor-safety filtering S3.4, generative spec/proposal assembly S3.5, unified proposal/assessment/email generation S4.5, brief-quality grading & eval S5.7). Everything else — scaffolding, CRUD, admin UI, infra, tests — runs on the current model at medium effort.

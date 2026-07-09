@@ -37,17 +37,17 @@ const navItems: NavItem[] = [
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-    const { url, props } = usePage<{ flash?: { success?: string | null } }>();
+    const { url, props } = usePage<{ flash?: { success?: string | null; error?: string | null } }>();
     const { toast } = useToast();
     const lastFlash = useRef<string | null>(null);
 
     useEffect(() => {
-        const message = props.flash?.success;
+        const message = props.flash?.success ?? props.flash?.error;
         if (message && message !== lastFlash.current) {
             lastFlash.current = message;
-            toast({ title: message });
+            toast({ title: message, variant: props.flash?.error ? 'destructive' : undefined });
         }
-    }, [props.flash?.success, toast]);
+    }, [props.flash?.success, props.flash?.error, toast]);
 
     return (
         <div className="flex min-h-screen bg-bg">

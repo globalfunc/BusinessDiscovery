@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\BusinessOwnerController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PipelineController;
+use App\Http\Controllers\Admin\ProposalBuilderController;
 use App\Http\Controllers\Admin\ReferralTokenController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
@@ -35,6 +36,18 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     Route::get('/business-owners/{businessOwner}/spec', [SpecReviewController::class, 'show'])
         ->name('business-owners.spec');
+
+    // S4.5 Proposal builder (§6.4/§6.5) — assessment is admin-only and must
+    // never gain a route outside this auth'd admin group.
+    Route::prefix('business-owners/{businessOwner}')->name('business-owners.')->group(function () {
+        Route::get('/proposal', [ProposalBuilderController::class, 'show'])->name('proposal');
+        Route::post('/assessment/generate', [ProposalBuilderController::class, 'generateAssessment'])->name('assessment.generate');
+        Route::post('/assessment', [ProposalBuilderController::class, 'storeAssessment'])->name('assessment.store');
+        Route::post('/proposal/generate', [ProposalBuilderController::class, 'generateProposal'])->name('proposal.generate');
+        Route::post('/proposal', [ProposalBuilderController::class, 'storeProposal'])->name('proposal.store');
+        Route::post('/proposal/upload', [ProposalBuilderController::class, 'uploadProposal'])->name('proposal.upload');
+        Route::post('/emails/generate', [ProposalBuilderController::class, 'generateEmail'])->name('emails.generate');
+    });
 
     Route::prefix('pipeline')->name('pipeline.')->group(function () {
         Route::get('/', [PipelineController::class, 'index'])->name('index');

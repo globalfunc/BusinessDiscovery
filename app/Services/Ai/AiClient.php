@@ -26,7 +26,11 @@ use Throwable;
  * tool — so DCP, the four suggest.* tools, and any future text-emitting tool
  * inherit it without per-tool wiring. On a blocklist hit, call() regenerates
  * once with a corrective turn; a second hit is redacted and flagged
- * vendor_leak on its ai_calls row for admin review.
+ * vendor_leak on its ai_calls row for admin review. A tool can opt out via
+ * ai.tools.<tool>.vendor_filter => false (§7.6.4 — the admin-drafted
+ * assessment/proposal/email tools, whose output never reaches the BO without
+ * a human edit pass); absent config means filtered, so BO-facing tools can
+ * never lose the filter by omission.
  */
 class AiClient
 {
@@ -63,6 +67,10 @@ class AiClient
         $result = $this->dispatch($request);
 
         if (! $result->successful || $result->text === null) {
+            return $result;
+        }
+
+        if (! $this->vendorFilterEnabled($request->tool)) {
             return $result;
         }
 
@@ -244,9 +252,23 @@ class AiClient
         );
     }
 
+    /**
+     * §7.6.4 scope check: filtering is the default — only an explicit
+     * ai.tools.<tool>.vendor_filter => false skips the scan.
+     */
+    private function vendorFilterEnabled(string $tool): bool
+    {
+        return $this->toolConfig($tool, 'vendor_filter') !== false;
+    }
+
+    /**
+     * Tool keys contain literal dots ("assessment.generate"), so they must be
+     * array-indexed — config("ai.tools.{$tool}.{$key}") would explode the tool
+     * name into nested segments and always miss.
+     */
     private function toolConfig(string $tool, string $key): mixed
     {
-        return config("ai.tools.{$tool}.{$key}");
+        return config('ai.tools')[$tool][$key] ?? null;
     }
 
     private function resolveModel(AiCallRequest $request): string

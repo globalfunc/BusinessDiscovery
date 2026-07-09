@@ -69,6 +69,26 @@ return [
         'spec.amend' => [
             'max_tokens' => 8192,
         ],
+
+        // S4.5 admin-side generators (§6.4/§6.5). vendor_filter => false is
+        // the §7.6.4 scope rule: these are admin-authored drafts with a
+        // mandatory human edit pass before anything reaches the BO (the
+        // assessment never reaches the BO at all), and their prompts actively
+        // invite naming real platforms/vendors for comparison — so neither
+        // VendorPolicy::systemRule() nor the AiClient output scan applies.
+        // Every other tool omits the key and stays filtered by default.
+        'assessment.generate' => [
+            'max_tokens' => 8192,
+            'vendor_filter' => false,
+        ],
+        'proposal.generate' => [
+            'max_tokens' => 8192,
+            'vendor_filter' => false,
+        ],
+        'email.generate' => [
+            'max_tokens' => 2048,
+            'vendor_filter' => false,
+        ],
     ],
 
     /*

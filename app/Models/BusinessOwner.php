@@ -71,4 +71,29 @@ class BusinessOwner extends Model
     {
         return $this->hasMany(Upload::class);
     }
+
+    public function assessmentDocuments(): HasMany
+    {
+        return $this->hasMany(AssessmentDocument::class);
+    }
+
+    public function latestAssessmentDocument(): HasOne
+    {
+        return $this->hasOne(AssessmentDocument::class)->ofMany('version', 'max');
+    }
+
+    public function proposalDocuments(): HasMany
+    {
+        return $this->hasMany(ProposalDocument::class);
+    }
+
+    public function latestProposalDocument(): HasOne
+    {
+        return $this->hasOne(ProposalDocument::class)->ofMany('version', 'max');
+    }
+
+    public function emailDrafts(): HasMany
+    {
+        return $this->hasMany(EmailDraft::class);
+    }
 }
