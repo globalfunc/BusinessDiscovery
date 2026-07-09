@@ -106,6 +106,15 @@ type DcpProfileView = {
     created_at: string | null;
 };
 
+type StageTransition = {
+    id: number;
+    from_stage: string | null;
+    to_stage: string;
+    note: string | null;
+    changed_by: string | null;
+    changed_at: string | null;
+};
+
 type SpecVersion = {
     id: number;
     version: number;
@@ -178,6 +187,7 @@ export default function BusinessOwnerShow({
     answers,
     uploads,
     dcpProfile,
+    stageHistory,
     specVersions,
     aiUsage,
 }: {
@@ -189,6 +199,7 @@ export default function BusinessOwnerShow({
     answers: PhaseAnswers[];
     uploads: UploadAsset[];
     dcpProfile: DcpProfileView | null;
+    stageHistory: StageTransition[];
     specVersions: SpecVersion[];
     aiUsage: AiUsage;
 }) {
@@ -551,6 +562,34 @@ export default function BusinessOwnerShow({
                                 <li key={event.id} className="border-b border-line pb-2 last:border-0 last:pb-0">
                                     <p className="font-ui text-sm text-text">{event.type.replace(/_/g, ' ')}</p>
                                     <p className="font-body text-xs text-text-faint">{formatDate(event.created_at)}</p>
+                                </li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+
+                <Card className="lg:col-span-2">
+                    <CardHeader>
+                        <CardTitle>Pipeline stage history</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {stageHistory.length === 0 && (
+                            <p className="font-body text-sm text-text-faint">No stage changes recorded yet.</p>
+                        )}
+                        <ul className="flex flex-col gap-3">
+                            {stageHistory.map((row) => (
+                                <li key={row.id} className="border-b border-line pb-2 last:border-0 last:pb-0">
+                                    <p className="font-ui text-sm text-text">
+                                        {row.from_stage ? `${row.from_stage.replace(/_/g, ' ')} → ` : ''}
+                                        {row.to_stage.replace(/_/g, ' ')}
+                                    </p>
+                                    {row.note && (
+                                        <p className="mt-1 whitespace-pre-wrap font-body text-xs text-text-muted">{row.note}</p>
+                                    )}
+                                    <p className="mt-1 font-body text-xs text-text-faint">
+                                        {formatDate(row.changed_at)}
+                                        {row.changed_by ? ` · ${row.changed_by}` : ''}
+                                    </p>
                                 </li>
                             ))}
                         </ul>

@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { GripVertical } from 'lucide-react';
 import { useMemo, useState, type DragEvent } from 'react';
 
@@ -242,10 +242,13 @@ export default function PipelineIndex({
                                     }`}
                                 >
                                     <div className="flex items-start justify-between gap-2">
-                                        <div>
+                                        <Link
+                                            href={route('admin.business-owners.show', bo.id)}
+                                            className="hover:underline"
+                                        >
                                             <p className="font-ui text-sm font-medium text-text">{bo.name}</p>
                                             <p className="font-body text-xs text-text-faint">{bo.company}</p>
-                                        </div>
+                                        </Link>
                                         <GripVertical className="mt-0.5 h-4 w-4 shrink-0 cursor-grab text-text-faint" />
                                     </div>
 

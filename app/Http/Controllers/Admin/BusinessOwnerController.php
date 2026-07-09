@@ -82,6 +82,7 @@ class BusinessOwnerController extends Controller
         $businessOwner->load([
             'referralTokens' => fn ($q) => $q->latest(),
             'activityEvents' => fn ($q) => $q->latest()->limit(20),
+            'leadStages' => fn ($q) => $q->latest('changed_at')->with('changedByUser:id,name'),
             'discoverySession.answers',
             'discoverySession.uploads',
             'discoverySession.dcpProfiles' => fn ($q) => $q->orderByDesc('version'),
@@ -132,6 +133,7 @@ class BusinessOwnerController extends Controller
                 'model_meta' => $latestDcpProfile->model_meta,
                 'created_at' => $latestDcpProfile->created_at?->toIso8601String(),
             ] : null,
+            'stageHistory' => $this->stageHistory($businessOwner),
             'specVersions' => $session ? $session->specDocuments->map(fn ($s) => [
                 'id' => $s->id,
                 'version' => $s->version,
@@ -191,6 +193,25 @@ class BusinessOwnerController extends Controller
                 ])->values(),
             ])
             ->sortBy(fn ($group) => $order[$group['phase']] ?? PHP_INT_MAX)
+            ->values()
+            ->all();
+    }
+
+    /** Full stage transition history, newest first, with the prior stage attached for a from → to display. */
+    private function stageHistory(BusinessOwner $businessOwner): array
+    {
+        $chronological = $businessOwner->leadStages->sortBy('changed_at')->values();
+
+        return $chronological
+            ->map(fn ($row, int $index) => [
+                'id' => $row->id,
+                'from_stage' => $index > 0 ? $chronological[$index - 1]->stage->value : null,
+                'to_stage' => $row->stage->value,
+                'note' => $row->note,
+                'changed_by' => $row->changedByUser?->name,
+                'changed_at' => $row->changed_at?->toIso8601String(),
+            ])
+            ->reverse()
             ->values()
             ->all();
     }
