@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AiSettingsController;
+use App\Http\Controllers\Admin\AiUsageController;
 use App\Http\Controllers\Admin\BusinessOwnerController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -93,6 +95,21 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::patch('/{vendorBlocklistTerm}', [VendorBlocklistController::class, 'update'])->name('update');
         Route::delete('/{vendorBlocklistTerm}', [VendorBlocklistController::class, 'destroy'])->name('destroy');
     });
+
+    // S4.7 — AI & system settings (§6.7): model/token/temperature/effort
+    // config, global+per-BO budgets, prompt template viewer/editor.
+    Route::prefix('ai-settings')->name('ai-settings.')->group(function () {
+        Route::get('/', [AiSettingsController::class, 'index'])->name('index');
+        Route::patch('/defaults', [AiSettingsController::class, 'updateDefaults'])->name('defaults.update');
+        Route::patch('/tools', [AiSettingsController::class, 'updateTool'])->name('tools.update');
+        Route::patch('/budgets', [AiSettingsController::class, 'updateBudgets'])->name('budgets.update');
+        Route::patch('/pricing', [AiSettingsController::class, 'updatePricing'])->name('pricing.update');
+        Route::post('/prompt-templates', [AiSettingsController::class, 'storePromptTemplate'])->name('prompt-templates.store');
+        Route::post('/prompt-templates/reset', [AiSettingsController::class, 'resetPromptTemplate'])->name('prompt-templates.reset');
+    });
+
+    // S4.7 — usage explorer (§6.7): per period/BO/call-type token & cost view.
+    Route::get('/ai-usage', [AiUsageController::class, 'index'])->name('ai-usage.index');
 });
 
 Route::middleware(['signed'])->get('/uploads/{upload}/file', [UploadController::class, 'show'])->name('uploads.show');

@@ -40,11 +40,18 @@ class AiClient
 
     private readonly BudgetGate $budgetGate;
 
-    public function __construct(?Client $client = null, ?VendorFilter $vendorFilter = null, ?BudgetGate $budgetGate = null)
-    {
+    private readonly AiSettings $aiSettings;
+
+    public function __construct(
+        ?Client $client = null,
+        ?VendorFilter $vendorFilter = null,
+        ?BudgetGate $budgetGate = null,
+        ?AiSettings $aiSettings = null,
+    ) {
         $this->client = $client ?? new Client(apiKey: config('ai.api_key'));
         $this->vendorFilter = $vendorFilter ?? app(VendorFilter::class);
         $this->budgetGate = $budgetGate ?? app(BudgetGate::class);
+        $this->aiSettings = $aiSettings ?? app(AiSettings::class);
     }
 
     /**
@@ -152,9 +159,9 @@ class AiClient
     protected function dispatch(AiCallRequest $request): AiCallResult
     {
         $model = $this->resolveModel($request);
-        $effort = $request->effort ?? $this->toolConfig($request->tool, 'effort') ?? config('ai.default_effort');
-        $maxTokens = $request->maxTokens ?? $this->toolConfig($request->tool, 'max_tokens') ?? config('ai.default_max_tokens');
-        $temperature = config('ai.default_temperature');
+        $effort = $request->effort ?? $this->toolConfig($request->tool, 'effort') ?? $this->aiSettings->default('effort');
+        $maxTokens = $request->maxTokens ?? $this->toolConfig($request->tool, 'max_tokens') ?? $this->aiSettings->default('max_tokens');
+        $temperature = $this->toolConfig($request->tool, 'temperature') ?? $this->aiSettings->default('temperature');
 
         $startedAt = microtime(true);
 
@@ -240,7 +247,7 @@ class AiClient
      */
     private function estimateCost(string $model, int $inputTokens, int $outputTokens): ?float
     {
-        $pricing = config("ai.pricing.{$model}");
+        $pricing = $this->aiSettings->pricing($model);
 
         if (! $pricing) {
             return null;
@@ -262,18 +269,18 @@ class AiClient
     }
 
     /**
-     * Tool keys contain literal dots ("assessment.generate"), so they must be
-     * array-indexed — config("ai.tools.{$tool}.{$key}") would explode the tool
-     * name into nested segments and always miss.
+     * Tool keys contain literal dots ("assessment.generate"); AiSettings
+     * array-indexes rather than dot-paths for the same reason the old direct
+     * config('ai.tools')[$tool][$key] read did.
      */
     private function toolConfig(string $tool, string $key): mixed
     {
-        return config('ai.tools')[$tool][$key] ?? null;
+        return $this->aiSettings->toolConfig($tool, $key);
     }
 
     private function resolveModel(AiCallRequest $request): string
     {
-        return $request->model ?? $this->toolConfig($request->tool, 'model') ?? config('ai.default_model');
+        return $request->model ?? $this->toolConfig($request->tool, 'model') ?? $this->aiSettings->default('model');
     }
 
     private function elapsedMs(float $startedAt): int

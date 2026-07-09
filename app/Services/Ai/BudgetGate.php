@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\RateLimiter;
  */
 class BudgetGate
 {
+    public function __construct(private readonly AiSettings $aiSettings = new AiSettings) {}
+
     public function check(AiCallRequest $request): ?AiCallStatus
     {
         if ($this->rateLimited($request)) {
@@ -27,7 +29,7 @@ class BudgetGate
         }
 
         if ($this->budgetExhausted($request)) {
-            if (config('ai.budget_mode', 'hard') !== 'hard') {
+            if ($this->aiSettings->budgets()['budget_mode'] !== 'hard') {
                 Log::warning('AI token budget exceeded (soft-warn mode: call allowed through).', [
                     'tool' => $request->tool,
                     'business_owner_id' => $request->businessOwner?->id,
@@ -50,7 +52,7 @@ class BudgetGate
     private function rateLimited(AiCallRequest $request): bool
     {
         $key = 'ai-calls:'.($request->businessOwner?->id ?? 'anon');
-        $max = (int) config('ai.rate_limit_per_minute', 6);
+        $max = (int) $this->aiSettings->budgets()['rate_limit_per_minute'];
 
         if (RateLimiter::tooManyAttempts($key, $max)) {
             return true;
@@ -63,7 +65,8 @@ class BudgetGate
 
     private function budgetExhausted(AiCallRequest $request): bool
     {
-        $globalCap = config('ai.global_monthly_token_cap');
+        $budgets = $this->aiSettings->budgets();
+        $globalCap = $budgets['global_monthly_token_cap'];
 
         if ($globalCap !== null && $this->tokensUsed(since: now()->startOfMonth()) >= $globalCap) {
             return true;
@@ -75,7 +78,7 @@ class BudgetGate
             return false;
         }
 
-        $perBoCap = $businessOwner->ai_token_cap ?? config('ai.per_bo_token_cap');
+        $perBoCap = $businessOwner->ai_token_cap ?? $budgets['per_bo_token_cap'];
 
         return $perBoCap !== null && $this->tokensUsed(businessOwnerId: $businessOwner->id) >= $perBoCap;
     }

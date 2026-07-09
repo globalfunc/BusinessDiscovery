@@ -15,9 +15,10 @@ return [
     | Default call parameters
     |--------------------------------------------------------------------------
     |
-    | Applied to every AiClient call unless a tool overrides them below.
-    | Admin-configurable model/effort/temperature screens land in S4.8; until
-    | then these are the only knobs, set via .env per deployment.
+    | Applied to every AiClient call unless a tool overrides them below, or an
+    | admin overrides either via the S4.7 AI settings screen — AiSettings
+    | reads a `settings` row first and falls back to these values, so an
+    | untouched deployment behaves exactly as before.
     |
     */
 
@@ -96,10 +97,10 @@ return [
     | Pricing table ($ per million tokens), for cost_estimate on ai_calls
     |--------------------------------------------------------------------------
     |
-    | S3.6 (token budgeting) and S4.8 (AI & system settings / usage explorer)
-    | read this table to compute and display cost. Keep it in sync with
-    | platform.claude.com/docs/en/pricing — update here first if the admin
-    | "price table" setting (§6.7) doesn't yet override it.
+    | S3.6 (token budgeting) and S4.7 (AI & system settings / usage explorer)
+    | read this table via AiSettings::pricing() to compute and display cost.
+    | Keep it in sync with platform.claude.com/docs/en/pricing — it's the
+    | fallback under any admin-edited "price table" override (§6.7).
     */
 
     'pricing' => [
@@ -121,6 +122,11 @@ return [
     'per_bo_token_cap' => env('AI_PER_BO_TOKEN_CAP', 300000),
     'global_monthly_token_cap' => env('AI_GLOBAL_MONTHLY_TOKEN_CAP'),
     'rate_limit_per_minute' => env('AI_RATE_LIMIT_PER_MINUTE', 6),
+
+    // §6.7 usage-explorer alert threshold: % of a cap consumed before the
+    // admin UI flags a BO/the global total as "nearing budget." Advisory
+    // only — does not affect BudgetGate's hard/soft enforcement below.
+    'alert_threshold_pct' => env('AI_ALERT_THRESHOLD_PCT', 80),
 
     // 'hard' blocks the call once a cap is reached (routes to each tool's
     // existing fallback, §7.7); 'soft' only warns (logs) and lets calls
