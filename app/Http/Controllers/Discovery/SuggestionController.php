@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Discovery;
 
+use App\Enums\DiscoveryPhase;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessOwner;
 use App\Models\DiscoverySession;
 use App\Services\Ai\Tools\Suggest\AbstractSuggestionAssembler;
 use App\Services\Ai\Tools\Suggest\BrandingSuggestionAssembler;
+use App\Services\Ai\Tools\Suggest\BriefContext;
 use App\Services\Ai\Tools\Suggest\ContentSocialSuggestionAssembler;
 use App\Services\Ai\Tools\Suggest\GrowthSuggestionAssembler;
 use App\Services\Ai\Tools\Suggest\ServiceSuggestionAssembler;
@@ -65,6 +67,7 @@ class SuggestionController extends Controller
             validator: new SuggestionSchemaValidator(requireCatalogKey: false),
             businessOwner: $businessOwner,
             discoverySession: $session,
+            briefContext: new BriefContext(phase: DiscoveryPhase::Phase4),
         );
 
         return $this->respond($result, $assembler, $session);
@@ -89,6 +92,7 @@ class SuggestionController extends Controller
             validator: new SuggestionSchemaValidator(requireCatalogKey: false),
             businessOwner: $businessOwner,
             discoverySession: $session,
+            briefContext: new BriefContext(phase: DiscoveryPhase::Phase5, module: $module),
         );
 
         return $this->respond($result, $scoped, $session);
@@ -100,6 +104,9 @@ class SuggestionController extends Controller
             return response()->json([
                 'status' => 'ok',
                 'suggestions' => $result->cards,
+                // S5.6 advisory brief — null when the tool doesn't produce
+                // one or the deterministic gate dropped it; cards stand alone.
+                'brief' => $result->brief,
             ]);
         }
 
@@ -108,6 +115,7 @@ class SuggestionController extends Controller
         return response()->json([
             'status' => 'unavailable',
             'suggestions' => $assembler->presetCards($session),
+            'brief' => null,
         ]);
     }
 

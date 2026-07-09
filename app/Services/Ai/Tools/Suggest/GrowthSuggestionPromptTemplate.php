@@ -21,7 +21,7 @@ class GrowthSuggestionPromptTemplate implements PromptTemplate
 
     public function version(): int
     {
-        return 1;
+        return 2;
     }
 
     public function systemPrompt(): string
@@ -37,6 +37,7 @@ Rules:
 - Ground every card in what the owner told us — their niche, the sub-options they already toggled in this area, and their broader context. Tie each card's rationale to their own situation.
 - Each card is a cohesive, actionable idea; its features are concrete capabilities or steps. Make cards distinct from one another.
 - If the owner wrote in Bulgarian, write every card's title, summary, features, and rationale in Bulgarian; tags stay short English snake_case slugs.
+- When the task asks for an advisory "brief", it is a short note of general direction and insight for this owner — it is NOT ready-to-publish copy, NOT captions or scripts, NOT a step-by-step action plan. It must be specific to their situation; omit it rather than write something any business could receive.
 - Respond with a single JSON object only. No markdown fences, no commentary before or after.
 PROMPT;
     }

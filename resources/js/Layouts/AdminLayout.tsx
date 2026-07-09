@@ -7,6 +7,7 @@ import {
     LayoutDashboard,
     Layers,
     LogOut,
+    NotebookPen,
     Settings2,
     ShieldAlert,
     Users,
@@ -32,6 +33,7 @@ const navItems: NavItem[] = [
     { label: 'Proposals', icon: FileSignature },
     { label: 'Content', icon: Layers, routeName: 'admin.content.index', href: '/admin/content' },
     { label: 'Vendor blocklist', icon: ShieldAlert, routeName: 'admin.vendor-blocklist.index', href: '/admin/vendor-blocklist' },
+    { label: 'Brief exemplars', icon: NotebookPen, routeName: 'admin.brief-exemplars.index', href: '/admin/brief-exemplars' },
     { label: 'AI Settings', icon: Settings2, routeName: 'admin.ai-settings.index', href: '/admin/ai-settings' },
     { label: 'Usage', icon: BarChart3, routeName: 'admin.ai-usage.index', href: '/admin/ai-usage' },
 ];

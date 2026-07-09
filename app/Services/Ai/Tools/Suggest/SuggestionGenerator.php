@@ -19,14 +19,24 @@ use Illuminate\Support\Facades\Log;
  */
 class SuggestionGenerator
 {
-    public function __construct(private readonly AiClient $aiClient) {}
+    public function __construct(
+        private readonly AiClient $aiClient,
+        private readonly AdvisoryBriefService $advisoryBriefs,
+    ) {}
 
+    /**
+     * @param  BriefContext|null  $briefContext  present only for the S5.6
+     *                                           brief-capable tools (content/social, growth) — the payload's
+     *                                           optional `brief` is then gated, persisted, and returned on the
+     *                                           result; every other tool ignores a stray brief field entirely.
+     */
     public function generate(
         string $tool,
         InputAssembler $assembler,
         SuggestionSchemaValidator $validator,
         BusinessOwner $businessOwner,
         DiscoverySession $discoverySession,
+        ?BriefContext $briefContext = null,
     ): SuggestionResult {
         $request = AiCallRequest::fromContextBlocks(
             tool: $tool,
@@ -40,19 +50,38 @@ class SuggestionGenerator
             return new SuggestionResult(false, []);
         }
 
-        $cards = $this->parseAndValidate($tool, $result->text, $validator);
+        $data = $this->parse($tool, $result->text);
 
-        if ($cards === null) {
+        if ($data === null || ! $this->validCards($tool, $data, $validator)) {
             return new SuggestionResult(false, []);
         }
 
-        return new SuggestionResult(true, $this->sanitizeCatalogKeys($cards));
+        // The brief is processed only once the cards themselves are usable —
+        // a preset-fallback response never carries a brief, so a note that
+        // contradicts static cards can't appear (S5.6).
+        $brief = null;
+
+        if ($briefContext !== null) {
+            $brief = $this->advisoryBriefs->process(
+                rawBrief: $data['brief'] ?? null,
+                businessOwner: $businessOwner,
+                session: $discoverySession,
+                context: $briefContext,
+                tool: $tool,
+                model: $result->aiCall->model,
+                exemplars: $assembler instanceof ProvidesBriefExemplars
+                    ? AdvisoryBriefService::exemplarSet($assembler->selectedExemplars())
+                    : [],
+            );
+        }
+
+        return new SuggestionResult(true, $this->sanitizeCatalogKeys($data['suggestions']), $brief);
     }
 
     /**
-     * @return array<int, array<string, mixed>>|null null when unusable
+     * @return array<string, mixed>|null the decoded payload, null when unusable
      */
-    private function parseAndValidate(string $tool, ?string $text, SuggestionSchemaValidator $validator): ?array
+    private function parse(string $tool, ?string $text): ?array
     {
         if ($text === null) {
             return null;
@@ -70,15 +99,23 @@ class SuggestionGenerator
             return null;
         }
 
+        return $data;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function validCards(string $tool, array $data, SuggestionSchemaValidator $validator): bool
+    {
         $errors = $validator->validate($data);
 
         if ($errors !== []) {
             Log::warning("{$tool} output failed schema validation.", ['errors' => $errors]);
 
-            return null;
+            return false;
         }
 
-        return $data['suggestions'];
+        return true;
     }
 
     /**

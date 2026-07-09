@@ -8,15 +8,28 @@ use App\Models\DiscoverySession;
 use App\Models\TaxonomyNiche;
 use App\Services\Ai\ContextBlock;
 use App\Services\Ai\ContextBlockType;
+use App\Services\Ai\PromptTemplateRegistry;
 
 /**
  * §7.3 block assembly for suggest.content_social (Phase 4). No catalog link
  * (content plays aren't catalog services), so related_catalog_key is always
  * null. Sends the niche flavor plus the BO's own content-need / platform /
  * cadence / interest answers so cards build on what they already told us.
+ * S5.6: also injects the brief-exemplar block and asks for the optional
+ * advisory `brief` in the same call — the content brief covers posts and
+ * presence only, never short-video scripts.
  */
-class ContentSocialSuggestionAssembler extends AbstractSuggestionAssembler
+class ContentSocialSuggestionAssembler extends AbstractSuggestionAssembler implements ProvidesBriefExemplars
 {
+    use InjectsBriefExemplars;
+
+    public function __construct(
+        PromptTemplateRegistry $templates,
+        private readonly BriefExemplarSelector $exemplarSelector,
+    ) {
+        parent::__construct($templates);
+    }
+
     protected function tool(): string
     {
         return 'suggest.content_social';
@@ -37,6 +50,7 @@ class ContentSocialSuggestionAssembler extends AbstractSuggestionAssembler
             new ContextBlock(ContextBlockType::StructuredAnswers, $this->contentAnswers($discoverySession)),
             new ContextBlock(ContextBlockType::PhaseNotes, $this->phaseNotes($discoverySession)),
             new ContextBlock(ContextBlockType::SuggestionPresets, $this->presetsInspiration($discoverySession)),
+            new ContextBlock(ContextBlockType::BriefExemplars, $this->briefExemplarsBlock($discoverySession)),
             new ContextBlock(ContextBlockType::TaskInstruction, $this->taskInstruction($discoverySession)),
         ];
     }
@@ -114,6 +128,7 @@ class ContentSocialSuggestionAssembler extends AbstractSuggestionAssembler
     private function taskInstruction(DiscoverySession $session): string
     {
         $language = $this->language($session);
+        $briefRules = $this->briefInstruction();
 
         return <<<TASK
 Propose 3 to 5 distinct content & social-presence plays for this business. Write in the interview language "{$language}".
@@ -121,6 +136,10 @@ Propose 3 to 5 distinct content & social-presence plays for this business. Write
 Return exactly this JSON shape:
 
 {
+  "brief": {
+    "paragraph": "<3-5 sentences of plain-language direction about their content & online presence>",
+    "bullets": ["<up to 4 short, specific insight bullets>"]
+  },
   "suggestions": [
     {
       "title": "<short plan name in the interview language>",
@@ -139,6 +158,9 @@ Rules:
 - Make the plays genuinely different from one another.
 - rationale must reference the owner's own niche, platforms, or expressed content needs whenever possible.
 - saas_eligible is always false and related_catalog_key is always null for content/social plays.
+
+{$briefRules}
+- This content brief covers posts and online presence only — do not discuss short-video scripts in the brief (cards may still include them).
 TASK;
     }
 }

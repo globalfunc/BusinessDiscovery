@@ -140,7 +140,8 @@
         "unavailable": "AI suggestions are temporarily unavailable — continue manually.",
         "loading1": "Reading your answers…",
         "loading2": "Matching ideas to your business…",
-        "loading3": "Shaping suggestions…"
+        "loading3": "Shaping suggestions…",
+        "briefTitle": "A note from the studio"
     },
     "phase3": {
         "styleHeading": "Which styles feel right for your brand?",

@@ -1,10 +1,16 @@
-import { RotateCw, Sparkles } from 'lucide-react';
+import { PenLine, RotateCw, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { SuggestionCard, type SuggestionCardData } from '@/components/discovery/SuggestionCard';
 import { Button } from '@/components/ui/button';
 
 type Status = 'idle' | 'loading' | 'ready' | 'unavailable';
+
+/** S5.6 advisory brief — optional §7.4 addition on the suggest response. */
+export type AdvisoryBrief = {
+    paragraph: string;
+    bullets: string[];
+};
 
 const STATUS_LINE_KEYS = ['suggestions.loading1', 'suggestions.loading2', 'suggestions.loading3'] as const;
 
@@ -34,6 +40,10 @@ export function SuggestionPanel({
 }) {
     const [status, setStatus] = useState<Status>('idle');
     const [cards, setCards] = useState<SuggestionCardData[]>([]);
+    // Kept independent from `cards` on purpose: the brief renders from its
+    // own state so S5.7's graded async-reveal can set it from a second
+    // request without touching the cards path.
+    const [brief, setBrief] = useState<AdvisoryBrief | null>(null);
     const [accepted, setAccepted] = useState<Set<number>>(new Set());
     const [dismissed, setDismissed] = useState<Set<number>>(new Set());
     const [busyIndex, setBusyIndex] = useState<number | null>(null);
@@ -55,15 +65,18 @@ export function SuggestionPanel({
         setStatus('loading');
         setAccepted(new Set());
         setDismissed(new Set());
+        setBrief(null);
         setStatusLine(0);
         window.axios
             .post(endpoint)
             .then(({ data }) => {
                 setCards(Array.isArray(data.suggestions) ? data.suggestions : []);
+                setBrief(data.brief && typeof data.brief.paragraph === 'string' ? data.brief : null);
                 setStatus(data.status === 'ok' ? 'ready' : 'unavailable');
             })
             .catch(() => {
                 setCards([]);
+                setBrief(null);
                 setStatus('unavailable');
             });
     };
@@ -152,6 +165,28 @@ export function SuggestionPanel({
                 <p className="rounded-md border border-line bg-surface px-3 py-2 font-body text-sm text-text-muted">
                     {t('suggestions.unavailable')}
                 </p>
+            )}
+
+            {status === 'ready' && brief && (
+                <aside className="rounded-bo border border-accent/30 bg-accent/5 p-4">
+                    <span className="inline-flex items-center gap-1.5 font-ui text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
+                        <PenLine className="h-3.5 w-3.5" />
+                        {t('suggestions.briefTitle')}
+                    </span>
+                    <p className="mt-2 font-body text-sm text-text">{brief.paragraph}</p>
+                    {brief.bullets.length > 0 && (
+                        <ul className="mt-2 flex flex-col gap-1 font-body text-sm text-text-muted">
+                            {brief.bullets.map((bullet, i) => (
+                                <li key={i} className="flex gap-2">
+                                    <span aria-hidden className="text-accent">
+                                        •
+                                    </span>
+                                    <span>{bullet}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </aside>
             )}
 
             {(status === 'ready' || status === 'unavailable') && visibleCards.length > 0 && (

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AiSettingsController;
 use App\Http\Controllers\Admin\AiUsageController;
+use App\Http\Controllers\Admin\BriefExemplarController;
 use App\Http\Controllers\Admin\BusinessOwnerController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -110,6 +111,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // S4.7 — usage explorer (§6.7): per period/BO/call-type token & cost view.
     Route::get('/ai-usage', [AiUsageController::class, 'index'])->name('ai-usage.index');
+
+    // S5.6 — advisory-brief exemplar library, read-only (editor comes in S5.7).
+    Route::get('/brief-exemplars', [BriefExemplarController::class, 'index'])->name('brief-exemplars.index');
 });
 
 Route::middleware(['signed'])->get('/uploads/{upload}/file', [UploadController::class, 'show'])->name('uploads.show');

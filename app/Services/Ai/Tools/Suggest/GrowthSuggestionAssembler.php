@@ -8,6 +8,7 @@ use App\Models\DiscoverySession;
 use App\Models\TaxonomyNiche;
 use App\Services\Ai\ContextBlock;
 use App\Services\Ai\ContextBlockType;
+use App\Services\Ai\PromptTemplateRegistry;
 use InvalidArgumentException;
 
 /**
@@ -15,10 +16,21 @@ use InvalidArgumentException;
  * per enabled module (notifications, marketing, lead-gen, admin/ops), so this
  * assembler is module-scoped: {@see withModule()} pins which module's answers,
  * focus line, and task instruction are sent, keeping each call tight and on-topic.
- * No catalog link — related_catalog_key is always null.
+ * No catalog link — related_catalog_key is always null. S5.6: each module call
+ * also injects the brief-exemplar block and asks for the optional advisory
+ * `brief`, scoped to that module's area.
  */
-class GrowthSuggestionAssembler extends AbstractSuggestionAssembler
+class GrowthSuggestionAssembler extends AbstractSuggestionAssembler implements ProvidesBriefExemplars
 {
+    use InjectsBriefExemplars;
+
+    public function __construct(
+        PromptTemplateRegistry $templates,
+        private readonly BriefExemplarSelector $exemplarSelector,
+    ) {
+        parent::__construct($templates);
+    }
+
     /**
      * The four Phase 5 modules (§3.6): the phase_5 answer field holding the
      * toggled sub-options, and the focus sentence that scopes the call.
@@ -86,6 +98,7 @@ class GrowthSuggestionAssembler extends AbstractSuggestionAssembler
             new ContextBlock(ContextBlockType::StructuredAnswers, $this->moduleAnswers($discoverySession)),
             new ContextBlock(ContextBlockType::PhaseNotes, $this->phaseNotes($discoverySession)),
             new ContextBlock(ContextBlockType::SuggestionPresets, $this->presetsInspiration($discoverySession)),
+            new ContextBlock(ContextBlockType::BriefExemplars, $this->briefExemplarsBlock($discoverySession)),
             new ContextBlock(ContextBlockType::TaskInstruction, $this->taskInstruction($discoverySession)),
         ];
     }
@@ -148,6 +161,7 @@ class GrowthSuggestionAssembler extends AbstractSuggestionAssembler
     {
         $language = $this->language($session);
         $focus = self::MODULES[$this->module]['focus'];
+        $briefRules = $this->briefInstruction();
 
         return <<<TASK
 Propose 3 to 5 distinct ideas for this business, strictly within this area: {$focus}. Write in the interview language "{$language}".
@@ -155,6 +169,10 @@ Propose 3 to 5 distinct ideas for this business, strictly within this area: {$fo
 Return exactly this JSON shape:
 
 {
+  "brief": {
+    "paragraph": "<3-5 sentences of plain-language direction about this area of their business>",
+    "bullets": ["<up to 4 short, specific insight bullets>"]
+  },
   "suggestions": [
     {
       "title": "<short idea name in the interview language>",
@@ -173,6 +191,9 @@ Rules:
 - Stay strictly within the area above; do not stray into other growth modules.
 - rationale must reference the owner's own niche, toggled sub-options, or expressed context whenever possible.
 - related_catalog_key is always null for growth ideas.
+
+{$briefRules}
+- The brief stays strictly within the area above, like the cards.
 TASK;
     }
 }

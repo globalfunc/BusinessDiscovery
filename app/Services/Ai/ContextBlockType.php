@@ -20,6 +20,7 @@ enum ContextBlockType: string
     case Assessment = 'assessment';
     case PhaseNotes = 'phase_notes';
     case SuggestionPresets = 'suggestion_presets';
+    case BriefExemplars = 'brief_exemplars';
     case TaskInstruction = 'task_instruction';
 
     public function label(): string
@@ -34,6 +35,7 @@ enum ContextBlockType: string
             self::Assessment => 'Internal technical assessment (admin-reviewed)',
             self::PhaseNotes => 'Phase-specific free-text notes',
             self::SuggestionPresets => 'Suggestion presets (inspiration)',
+            self::BriefExemplars => 'Advisory brief exemplars (gold standard)',
             self::TaskInstruction => 'Task instruction & output schema',
         };
     }
