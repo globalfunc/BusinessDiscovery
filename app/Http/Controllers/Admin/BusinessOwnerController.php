@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\BusinessOwnerStatus;
+use App\Enums\DiscoveryPhase;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreBusinessOwnerRequest;
 use App\Http\Requests\Admin\UpdateBusinessOwnerRequest;
 use App\Models\ActivityEvent;
+use App\Models\AiCall;
 use App\Models\BusinessOwner;
+use App\Models\DiscoverySession;
 use App\Models\TaxonomyNiche;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -75,7 +79,17 @@ class BusinessOwnerController extends Controller
 
     public function show(BusinessOwner $businessOwner): Response
     {
-        $businessOwner->load(['referralTokens' => fn ($q) => $q->latest(), 'activityEvents' => fn ($q) => $q->latest()->limit(20)]);
+        $businessOwner->load([
+            'referralTokens' => fn ($q) => $q->latest(),
+            'activityEvents' => fn ($q) => $q->latest()->limit(20),
+            'discoverySession.answers',
+            'discoverySession.uploads',
+            'discoverySession.dcpProfiles' => fn ($q) => $q->orderByDesc('version'),
+            'discoverySession.specDocuments' => fn ($q) => $q->orderByDesc('version'),
+        ]);
+
+        $session = $businessOwner->discoverySession;
+        $latestDcpProfile = $session?->dcpProfiles->first();
 
         return Inertia::render('Admin/BusinessOwners/Show', [
             'businessOwner' => [
@@ -108,7 +122,105 @@ class BusinessOwnerController extends Controller
                 'payload' => $e->payload,
                 'created_at' => $e->created_at?->toIso8601String(),
             ]),
+            'discovery' => $session ? $this->discoveryProgress($session) : null,
+            'answers' => $session ? $this->answersByPhase($session) : [],
+            'uploads' => $session ? $session->uploads->map(fn ($u) => array_merge($u->toDiscoveryArray(), ['phase' => $u->phase]))->values() : [],
+            'dcpProfile' => $latestDcpProfile ? [
+                'version' => $latestDcpProfile->version,
+                'is_empty' => $latestDcpProfile->isEmpty(),
+                'payload' => $latestDcpProfile->payload,
+                'model_meta' => $latestDcpProfile->model_meta,
+                'created_at' => $latestDcpProfile->created_at?->toIso8601String(),
+            ] : null,
+            'specVersions' => $session ? $session->specDocuments->map(fn ($s) => [
+                'id' => $s->id,
+                'version' => $s->version,
+                'generated_by' => $s->generated_by,
+                'change_summary' => $s->change_summary,
+                'created_at' => $s->created_at?->toIso8601String(),
+            ])->values() : [],
+            'aiUsage' => $this->boAiUsage($businessOwner),
         ]);
+    }
+
+    /**
+     * Per-phase discovery progress: completed phases are everything before
+     * the session's current_phase (or all of them once submitted), the
+     * current_phase is "current", the rest are "upcoming".
+     */
+    private function discoveryProgress(DiscoverySession $session): array
+    {
+        $ordered = DiscoveryPhase::ordered();
+        $currentIndex = array_search($session->current_phase, $ordered, true);
+        $submitted = $session->status === 'submitted';
+
+        $phases = collect($ordered)->map(fn (DiscoveryPhase $phase, int $index) => [
+            'value' => $phase->value,
+            'label' => $phase->label(),
+            'status' => match (true) {
+                $submitted => 'completed',
+                $index < $currentIndex => 'completed',
+                $index === $currentIndex => 'current',
+                default => 'upcoming',
+            },
+        ])->values()->all();
+
+        return [
+            'current_phase' => $session->current_phase->value,
+            'status' => $session->status,
+            'started_at' => $session->started_at?->toIso8601String(),
+            'submitted_at' => $session->submitted_at?->toIso8601String(),
+            'phases' => $phases,
+        ];
+    }
+
+    /** Structured answers grouped by phase, in phase order, with humanized field labels. */
+    private function answersByPhase(DiscoverySession $session): array
+    {
+        $order = array_flip(array_map(fn (DiscoveryPhase $p) => $p->value, DiscoveryPhase::ordered()));
+
+        return $session->answers
+            ->groupBy('phase')
+            ->map(fn ($answers, $phase) => [
+                'phase' => $phase,
+                'label' => DiscoveryPhase::tryFrom($phase)?->label() ?? $phase,
+                'answers' => $answers->map(fn ($a) => [
+                    'field_key' => $a->field_key,
+                    'label' => Str::headline($a->field_key),
+                    'value' => $a->value,
+                ])->values(),
+            ])
+            ->sortBy(fn ($group) => $order[$group['phase']] ?? PHP_INT_MAX)
+            ->values()
+            ->all();
+    }
+
+    /** AI usage & cost scoped to a single BO (§7.7 cap accounting), overall + per-tool. */
+    private function boAiUsage(BusinessOwner $businessOwner): array
+    {
+        $totals = AiCall::query()
+            ->where('business_owner_id', $businessOwner->id)
+            ->selectRaw('coalesce(sum(input_tokens + output_tokens), 0) as tokens, coalesce(sum(cost_estimate), 0) as cost, count(*) as calls')
+            ->first();
+
+        $byTool = AiCall::query()
+            ->where('business_owner_id', $businessOwner->id)
+            ->select('tool')
+            ->selectRaw('sum(input_tokens + output_tokens) as tokens, sum(cost_estimate) as cost, count(*) as calls')
+            ->groupBy('tool')
+            ->orderByDesc('tokens')
+            ->get()
+            ->map(fn ($row) => [
+                'tool' => $row->tool,
+                'tokens' => (int) $row->tokens,
+                'cost' => round((float) $row->cost, 6),
+                'calls' => (int) $row->calls,
+            ]);
+
+        return [
+            'total' => ['tokens' => (int) $totals->tokens, 'cost' => round((float) $totals->cost, 6), 'calls' => (int) $totals->calls],
+            'by_tool' => $byTool,
+        ];
     }
 
     public function update(UpdateBusinessOwnerRequest $request, BusinessOwner $businessOwner): RedirectResponse
