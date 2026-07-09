@@ -804,8 +804,16 @@ export default function BusinessOwnerShow({
                 </Card>
 
                 <Card className="lg:col-span-2">
-                    <CardHeader>
+                    <CardHeader className="flex-row items-center justify-between space-y-0">
                         <CardTitle>Specification versions</CardTitle>
+                        {specVersions.length > 0 && (
+                            <Link
+                                href={route('admin.business-owners.spec', businessOwner.id)}
+                                className="font-ui text-xs font-medium text-accent hover:underline"
+                            >
+                                Review spec
+                            </Link>
+                        )}
                     </CardHeader>
                     <CardContent>
                         {specVersions.length === 0 && (

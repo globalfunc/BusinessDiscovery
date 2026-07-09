@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\PipelineController;
 use App\Http\Controllers\Admin\ReferralTokenController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SpecReviewController;
 use App\Http\Controllers\Admin\TaxonomyCategoryController;
 use App\Http\Controllers\Admin\TaxonomyNicheController;
 use App\Http\Controllers\Admin\VendorBlocklistController;
@@ -31,6 +32,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     Route::resource('business-owners', BusinessOwnerController::class)
         ->except(['create', 'edit']);
+
+    Route::get('/business-owners/{businessOwner}/spec', [SpecReviewController::class, 'show'])
+        ->name('business-owners.spec');
 
     Route::prefix('pipeline')->name('pipeline.')->group(function () {
         Route::get('/', [PipelineController::class, 'index'])->name('index');
