@@ -90,6 +90,15 @@ return [
             'max_tokens' => 2048,
             'vendor_filter' => false,
         ],
+
+        // S5.7 LLM-as-judge over advisory briefs: cheap model, tight cap —
+        // the output is four scores plus one-line reasons, nothing more.
+        // Vendor filter stays on (default): the reasons are prose an admin
+        // reads, so they follow the same neutrality rule as everything else.
+        'brief.grade' => [
+            'model' => 'claude-haiku-4-5',
+            'max_tokens' => 1024,
+        ],
     ],
 
     /*
@@ -145,5 +154,53 @@ return [
     */
 
     'vendor_redaction_label' => env('AI_VENDOR_REDACTION_LABEL', 'a custom solution'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Advisory-brief grading rubric (S5.7)
+    |--------------------------------------------------------------------------
+    |
+    | Defaults under the admin-edited rubric (AiSettings::briefRubric()), same
+    | fallback pattern as everything above. Weights are relative (normalized
+    | at scoring time); the composite is the weighted mean of the 1–5
+    | per-dimension scores. `mode` log_only grades + persists but reveals
+    | whatever passed the S5.6 deterministic gate; `enforce` hides briefs
+    | whose composite misses `threshold` (verdict hidden_low_value). Ships
+    | log_only — flip to enforce once the threshold is calibrated against
+    | admin labels. `version` is auto-bumped by the rubric editor when the
+    | dimensions change, and stamped on every graded advisory_briefs row.
+    */
+
+    'brief_rubric' => [
+        'version' => 1,
+        'mode' => 'log_only',
+        'threshold' => 3.5,
+        'dimensions' => [
+            [
+                'key' => 'specificity',
+                'label' => 'Specificity',
+                'description' => 'References this owner\'s real business — their niche, stated pain points, or goals — not advice any business could receive.',
+                'weight' => 0.3,
+            ],
+            [
+                'key' => 'insight',
+                'label' => 'Insight vs. platitude',
+                'description' => 'Offers a genuine observation or non-obvious direction rather than generic filler ("post consistently", "engage your audience").',
+                'weight' => 0.3,
+            ],
+            [
+                'key' => 'non_deliverable',
+                'label' => 'Non-deliverable / safety',
+                'description' => 'Stays general advice and insight; does not drift into ready-to-publish copy, captions, scripts, or a step-by-step action plan.',
+                'weight' => 0.2,
+            ],
+            [
+                'key' => 'credibility',
+                'label' => 'Credibility / tone',
+                'description' => 'Sounds like a seasoned studio advisor: professional, warm, concrete; no hype, no scolding, no invented facts about the business.',
+                'weight' => 0.2,
+            ],
+        ],
+    ],
 
 ];

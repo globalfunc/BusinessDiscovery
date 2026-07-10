@@ -2,6 +2,7 @@
 
 namespace App\Services\Ai\Support;
 
+use App\Models\DcpProfile;
 use App\Models\DiscoverySession;
 
 /**
@@ -14,8 +15,16 @@ final class DcpDigest
 {
     public static function for(DiscoverySession $session): string
     {
-        $profile = $session->latestDcpProfile;
+        return self::fromProfile($session->latestDcpProfile);
+    }
 
+    /**
+     * Digest a specific persisted profile — S5.7's brief grader and the admin
+     * review surface reconstruct the DCP snapshot an advisory_briefs row
+     * pointed at, which may not be the session's latest anymore.
+     */
+    public static function fromProfile(?DcpProfile $profile): string
+    {
         if ($profile === null || $profile->isEmpty()) {
             return '';
         }

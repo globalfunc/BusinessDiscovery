@@ -1,6 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
     BarChart3,
+    ClipboardCheck,
     FileSignature,
     FileText,
     Kanban,
@@ -34,6 +35,7 @@ const navItems: NavItem[] = [
     { label: 'Content', icon: Layers, routeName: 'admin.content.index', href: '/admin/content' },
     { label: 'Vendor blocklist', icon: ShieldAlert, routeName: 'admin.vendor-blocklist.index', href: '/admin/vendor-blocklist' },
     { label: 'Brief exemplars', icon: NotebookPen, routeName: 'admin.brief-exemplars.index', href: '/admin/brief-exemplars' },
+    { label: 'Advisory briefs', icon: ClipboardCheck, routeName: 'admin.advisory-briefs.index', href: '/admin/advisory-briefs' },
     { label: 'AI Settings', icon: Settings2, routeName: 'admin.ai-settings.index', href: '/admin/ai-settings' },
     { label: 'Usage', icon: BarChart3, routeName: 'admin.ai-usage.index', href: '/admin/ai-usage' },
 ];

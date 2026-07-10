@@ -59,10 +59,10 @@ class SuggestionGenerator
         // The brief is processed only once the cards themselves are usable —
         // a preset-fallback response never carries a brief, so a note that
         // contradicts static cards can't appear (S5.6).
-        $brief = null;
+        $briefRecord = null;
 
         if ($briefContext !== null) {
-            $brief = $this->advisoryBriefs->process(
+            $briefRecord = $this->advisoryBriefs->process(
                 rawBrief: $data['brief'] ?? null,
                 businessOwner: $businessOwner,
                 session: $discoverySession,
@@ -75,7 +75,7 @@ class SuggestionGenerator
             );
         }
 
-        return new SuggestionResult(true, $this->sanitizeCatalogKeys($data['suggestions']), $brief);
+        return new SuggestionResult(true, $this->sanitizeCatalogKeys($data['suggestions']), $briefRecord?->id);
     }
 
     /**

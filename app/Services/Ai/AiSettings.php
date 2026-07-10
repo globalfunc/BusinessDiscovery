@@ -26,6 +26,8 @@ class AiSettings
 
     private const PRICING_KEY = 'ai_pricing';
 
+    private const BRIEF_RUBRIC_KEY = 'ai_brief_rubric';
+
     /** @var array<string, string> tool => model, effort, max_tokens, temperature */
     public function toolConfig(string $tool, string $key): mixed
     {
@@ -113,6 +115,25 @@ class AiSettings
             $values,
             fn ($value) => $value !== null && $value !== '',
         )]);
+    }
+
+    /**
+     * S5.7 brief-grading rubric: dimensions/weights, threshold, mode
+     * (log_only | enforce), version. Stored whole — partial rows would leave
+     * the dimensions and their weights out of sync with the version stamp.
+     *
+     * @return array{version: int, mode: string, threshold: float, dimensions: array<int, array{key: string, label: string, description: string, weight: float}>}
+     */
+    public function briefRubric(): array
+    {
+        $stored = $this->settingValue(self::BRIEF_RUBRIC_KEY);
+
+        return $stored !== [] ? $stored : config('ai.brief_rubric');
+    }
+
+    public function setBriefRubric(array $rubric): void
+    {
+        Setting::query()->updateOrCreate(['key' => self::BRIEF_RUBRIC_KEY], ['value' => $rubric]);
     }
 
     private function toolKey(string $tool): string

@@ -29,23 +29,7 @@ trait InjectsBriefExemplars
     {
         $this->selectedExemplars = $this->exemplarSelector->selectFor($session);
 
-        if ($this->selectedExemplars->isEmpty()) {
-            return '';
-        }
-
-        $rendered = $this->selectedExemplars->map(function (BriefExemplar $exemplar, int $index) {
-            $brief = $exemplar->exemplar_brief;
-            $bullets = implode("\n", array_map(
-                fn (string $bullet) => "- {$bullet}",
-                array_filter((array) ($brief['bullets'] ?? []), 'is_string'),
-            ));
-
-            $number = $index + 1;
-
-            return "### Exemplar {$number}\nTheir context:\n{$exemplar->dcp_excerpt}\nThe brief we wrote for them:\n".($brief['paragraph'] ?? '')."\n{$bullets}";
-        })->implode("\n\n");
-
-        return "Gold-standard advisory briefs written for other businesses. Match their specificity, depth, and advisory tone — but ground YOUR brief entirely in this owner's own context; never reuse their content:\n\n{$rendered}";
+        return BriefPrompt::exemplarsBlock($this->selectedExemplars);
     }
 
     /**
@@ -55,13 +39,6 @@ trait InjectsBriefExemplars
      */
     protected function briefInstruction(): string
     {
-        return <<<'BRIEF'
-The optional top-level "brief" is a short "note from the studio" shown above the cards:
-- It is general advice and insight about this owner's situation — NOT ready-to-publish copy, NOT captions or scripts, NOT a step-by-step action plan.
-- It MUST reference this owner's own niche, pain points, or goals concretely; a brief that could apply to any business is worthless and will be discarded.
-- No generic platitudes ("consistency is key", "content is king", and the like).
-- Keep it tight: the paragraph plus bullets together under 800 characters, at most 4 bullets.
-- Write it in the interview language, same as the cards. Omit the field entirely if you cannot make it specific.
-BRIEF;
+        return BriefPrompt::instruction();
     }
 }

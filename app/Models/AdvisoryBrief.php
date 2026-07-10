@@ -26,6 +26,11 @@ class AdvisoryBrief extends Model
         'brief',
         'verdict',
         'drop_reason',
+        'scores',
+        'composite',
+        'judge_model',
+        'rubric_version',
+        'label',
         'model',
         'prompt_version',
         'exemplars',
@@ -37,8 +42,11 @@ class AdvisoryBrief extends Model
         return [
             'brief' => 'array',
             'exemplars' => 'array',
+            'scores' => 'array',
+            'composite' => 'float',
             'verdict' => AdvisoryBriefVerdict::class,
             'prompt_version' => 'integer',
+            'rubric_version' => 'integer',
             'created_at' => 'datetime',
         ];
     }

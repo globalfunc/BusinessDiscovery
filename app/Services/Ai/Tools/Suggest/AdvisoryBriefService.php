@@ -45,7 +45,8 @@ class AdvisoryBriefService
     /**
      * @param  mixed  $rawBrief  the payload's `brief` value (missing = null)
      * @param  array<int, array{id: int, version: int}>  $exemplars  the id+version set that was in context
-     * @return array{paragraph: string, bullets: array<int, string>}|null the brief to show, or null when dropped
+     * @return AdvisoryBrief|null the gate-passing row (S5.7 holds its brief
+     *                            back until the async brief.grade reveal), or null when dropped
      */
     public function process(
         mixed $rawBrief,
@@ -55,7 +56,7 @@ class AdvisoryBriefService
         string $tool,
         string $model,
         array $exemplars,
-    ): ?array {
+    ): ?AdvisoryBrief {
         $dropReason = $rawBrief === null
             ? 'missing'
             : $this->gate->evaluate($rawBrief, $this->groundingTokens($session));
@@ -85,10 +86,7 @@ class AdvisoryBriefService
             return null;
         }
 
-        return [
-            'paragraph' => $rawBrief['paragraph'],
-            'bullets' => array_values($rawBrief['bullets'] ?? []),
-        ];
+        return $record;
     }
 
     /**

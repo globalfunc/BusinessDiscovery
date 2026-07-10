@@ -10,6 +10,7 @@ use App\Services\Ai\Tools\Proposal\ProposalPromptTemplate;
 use App\Services\Ai\Tools\Spec\SpecAmendPromptTemplate;
 use App\Services\Ai\Tools\Spec\SpecCompilePromptTemplate;
 use App\Services\Ai\Tools\Suggest\BrandingSuggestionPromptTemplate;
+use App\Services\Ai\Tools\Suggest\BriefGradePromptTemplate;
 use App\Services\Ai\Tools\Suggest\ContentSocialSuggestionPromptTemplate;
 use App\Services\Ai\Tools\Suggest\GrowthSuggestionPromptTemplate;
 use App\Services\Ai\Tools\Suggest\ServiceSuggestionPromptTemplate;
@@ -41,5 +42,6 @@ class AppServiceProvider extends ServiceProvider
         $registry->register(new AssessmentPromptTemplate);
         $registry->register(new ProposalPromptTemplate);
         $registry->register(new EmailPromptTemplate);
+        $registry->register(new BriefGradePromptTemplate);
     }
 }

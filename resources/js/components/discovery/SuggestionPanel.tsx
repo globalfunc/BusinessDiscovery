@@ -49,6 +49,9 @@ export function SuggestionPanel({
     const [busyIndex, setBusyIndex] = useState<number | null>(null);
     const [statusLine, setStatusLine] = useState(0);
     const rotateRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    // Regeneration guard for the async brief reveal: a reveal response only
+    // lands if no newer fetch has started since it was requested.
+    const fetchSeqRef = useRef(0);
 
     useEffect(() => {
         if (status !== 'loading') {
@@ -62,6 +65,7 @@ export function SuggestionPanel({
     }, [status]);
 
     const fetchSuggestions = () => {
+        const seq = ++fetchSeqRef.current;
         setStatus('loading');
         setAccepted(new Set());
         setDismissed(new Set());
@@ -71,8 +75,21 @@ export function SuggestionPanel({
             .post(endpoint)
             .then(({ data }) => {
                 setCards(Array.isArray(data.suggestions) ? data.suggestions : []);
-                setBrief(data.brief && typeof data.brief.paragraph === 'string' ? data.brief : null);
                 setStatus(data.status === 'ok' ? 'ready' : 'unavailable');
+                // S5.7 async-reveal: cards are never blocked on the brief —
+                // grading runs as a second request and the brief appears a
+                // beat later only if it clears the judge; a failed or slow
+                // grade simply means no note shows up.
+                if (typeof data.brief_url === 'string') {
+                    window.axios
+                        .post(data.brief_url)
+                        .then(({ data: reveal }) => {
+                            if (seq === fetchSeqRef.current && reveal.brief && typeof reveal.brief.paragraph === 'string') {
+                                setBrief({ paragraph: reveal.brief.paragraph, bullets: Array.isArray(reveal.brief.bullets) ? reveal.brief.bullets : [] });
+                            }
+                        })
+                        .catch(() => {});
+                }
             })
             .catch(() => {
                 setCards([]);

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdvisoryBriefController;
 use App\Http\Controllers\Admin\AiSettingsController;
 use App\Http\Controllers\Admin\AiUsageController;
 use App\Http\Controllers\Admin\BriefExemplarController;
@@ -112,8 +113,21 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // S4.7 — usage explorer (§6.7): per period/BO/call-type token & cost view.
     Route::get('/ai-usage', [AiUsageController::class, 'index'])->name('ai-usage.index');
 
-    // S5.6 — advisory-brief exemplar library, read-only (editor comes in S5.7).
+    // S5.6/S5.7 — advisory-brief exemplar library + editor. No destroy route:
+    // exemplars are referenced by id+version from advisory_briefs rows, so
+    // retiring one is active=false, never a hard delete.
     Route::get('/brief-exemplars', [BriefExemplarController::class, 'index'])->name('brief-exemplars.index');
+    Route::post('/brief-exemplars', [BriefExemplarController::class, 'store'])->name('brief-exemplars.store');
+    Route::patch('/brief-exemplars/{briefExemplar}', [BriefExemplarController::class, 'update'])->name('brief-exemplars.update');
+
+    // S5.7 — advisory-brief review & labeling surface + rubric editor: the
+    // admin calibration loop over everything the brief pipeline persisted.
+    Route::prefix('advisory-briefs')->name('advisory-briefs.')->group(function () {
+        Route::get('/', [AdvisoryBriefController::class, 'index'])->name('index');
+        Route::patch('/rubric', [AdvisoryBriefController::class, 'updateRubric'])->name('rubric.update');
+        Route::get('/{advisoryBrief}', [AdvisoryBriefController::class, 'show'])->name('show');
+        Route::patch('/{advisoryBrief}/label', [AdvisoryBriefController::class, 'label'])->name('label');
+    });
 });
 
 Route::middleware(['signed'])->get('/uploads/{upload}/file', [UploadController::class, 'show'])->name('uploads.show');
@@ -134,6 +148,8 @@ Route::middleware(['discovery.access'])->prefix('discovery')->name('discovery.')
     Route::post('/suggest/branding', [SuggestionController::class, 'branding'])->name('suggest.branding');
     Route::post('/suggest/content-social', [SuggestionController::class, 'contentSocial'])->name('suggest.content_social');
     Route::post('/suggest/growth/{module}', [SuggestionController::class, 'growth'])->name('suggest.growth');
+    // S5.7 async-reveal: grades a gate-passing brief and returns it (or null).
+    Route::post('/suggest/brief/{advisoryBrief}/reveal', [SuggestionController::class, 'revealBrief'])->name('suggest.brief_reveal');
     Route::post('/spec/compile', [SpecController::class, 'compile'])->name('spec.compile');
     Route::post('/spec/amend', [SpecController::class, 'amend'])->name('spec.amend');
     Route::post('/services', [SelectedServiceController::class, 'store'])->name('services.store');

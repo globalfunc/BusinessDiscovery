@@ -1,0 +1,78 @@
+{
+    "_readme": "S5.7 offline eval gold set for advisory briefs (briefs:eval). Each case is a representative DCP digest plus a human-graded target brief. expect=pass means a correctly calibrated judge should score the target brief at/above the rubric threshold; expect=fail cases are deliberately weak briefs the judge must reject. Extend this set from real labeled briefs in the admin review screen — 'actually good' labeled briefs make new pass cases, 'actually bad' ones make fail cases.",
+    "cases": [
+        {
+            "key": "bakery-instagram-good",
+            "language": "en",
+            "dcp_digest": "Family-run artisan bakery in a mid-size town, strong local walk-in trade but almost no online presence.\nDigital maturity: low\nPain points: no time to post; doesn't know what to photograph; competitors visible on Instagram\nGoals: attract younger customers; take pre-orders for custom cakes\nStrengths: distinctive sourdough range; loyal regulars; photogenic storefront",
+            "grounding_tokens": ["bakery", "sourdough", "instagram", "cakes", "storefront", "pre-orders"],
+            "target_brief": {
+                "paragraph": "Your sourdough range and custom cakes are the two things nobody nearby can copy, and they photograph well — which matters more than posting often. The pre-order goal changes what your profile is for: it should work like a counter, not a brochure.",
+                "bullets": [
+                    "Lead with the cakes: they are the product people plan and search for, so they justify a booking flow.",
+                    "Your regulars are your unpaid content team — their habit of coming back is the story younger customers respond to.",
+                    "The storefront is a stage; one good weekly photo beats daily filler you don't have time for."
+                ]
+            },
+            "expect": "pass"
+        },
+        {
+            "key": "auto-repair-growth-good",
+            "language": "en",
+            "dcp_digest": "Independent auto-repair shop, two lifts, owner quotes by phone only.\nDigital maturity: medium\nPain points: no-shows for booked slots; quoting takes evenings; review count far below rivals\nGoals: fill Tuesday-Thursday capacity; stop losing fleet clients to chains\nStrengths: honest-pricing reputation; fast turnaround on diagnostics",
+            "grounding_tokens": ["repair", "quotes", "no-shows", "fleet", "diagnostics", "reviews", "tuesday"],
+            "target_brief": {
+                "paragraph": "The no-show and evening-quoting problems are the same problem: everything routes through your phone. Fleet clients in particular are choosing chains for predictability, not price — your honest-pricing reputation only wins if it is visible where they compare.",
+                "bullets": [
+                    "Midweek capacity is a scheduling-visibility issue, not a demand issue — the diagnostics speed is your lever there.",
+                    "Reviews are the fleet buyer's shortlist filter; the gap to rivals costs you before you ever quote."
+                ]
+            },
+            "expect": "pass"
+        },
+        {
+            "key": "salon-bg-good",
+            "language": "bg",
+            "dcp_digest": "Малък фризьорски салон в квартал с много конкуренция, силна база от постоянни клиентки.\nDigital maturity: low\nPain points: празни часове в понеделник и вторник; клиентките резервират само по телефона\nGoals: повече млади клиентки; онлайн резервации\nStrengths: колористка с награди; лоялни клиентки от години",
+            "grounding_tokens": ["салон", "фризьорски", "колористка", "резервации", "понеделник", "клиентки"],
+            "target_brief": {
+                "paragraph": "Наградената колористка е това, което никой съседен салон не може да претендира — тя е причината млада клиентка да прекоси квартала. Празните понеделници и телефонните резервации са свързани: без онлайн запазване никой не вижда кога сте свободни.",
+                "bullets": [
+                    "Портфолиото на колористката е по-силен аргумент от всякаква промоция.",
+                    "Лоялните клиентки са мостът към дъщерите и приятелките им — препоръката е вашият канал."
+                ]
+            },
+            "expect": "pass"
+        },
+        {
+            "key": "generic-platitudes-bad",
+            "language": "en",
+            "dcp_digest": "Boutique florist, weddings are the high-margin work but walk-ins dominate the schedule.\nDigital maturity: low\nPain points: wedding leads arrive too late in the season; website is a single outdated page\nGoals: more wedding bookings; look premium online\nStrengths: styled-shoot portfolio; venue partnerships",
+            "grounding_tokens": ["florist", "wedding", "venue", "portfolio", "bookings"],
+            "target_brief": {
+                "paragraph": "Social media is a great way to grow your business. By showing up online regularly and connecting with your audience, you can build trust and attract more customers over time.",
+                "bullets": [
+                    "Share behind-the-scenes content to seem authentic.",
+                    "Use relevant hashtags to increase your reach.",
+                    "Stay active and respond to comments."
+                ]
+            },
+            "expect": "fail"
+        },
+        {
+            "key": "deliverable-drift-bad",
+            "language": "en",
+            "dcp_digest": "Personal-training studio, three trainers, classes sell out but 1:1 slots do not.\nDigital maturity: medium\nPain points: 1:1 slots unsold; Instagram followers don't convert\nGoals: fill 1:1 slots; launch an online programme\nStrengths: strong class community; before/after results archive",
+            "grounding_tokens": ["training", "trainers", "classes", "slots", "instagram", "programme"],
+            "target_brief": {
+                "paragraph": "Here is your content plan for next week. Monday: post 'Struggling to stay consistent? Our 1:1 coaching is for you — link in bio!'. Wednesday: share a before/after with the caption 'Real results from real people'. Friday: run a story poll asking 'Classes or 1:1?'.",
+                "bullets": [
+                    "Monday caption: 'New week, new goals 💪 Book your free consult today!'",
+                    "Post at 6pm for best engagement.",
+                    "Repeat this cycle every week."
+                ]
+            },
+            "expect": "fail"
+        }
+    ]
+}

@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Discovery;
 
+use App\Enums\AdvisoryBriefVerdict;
 use App\Enums\DiscoveryPhase;
 use App\Http\Controllers\Controller;
+use App\Models\AdvisoryBrief;
 use App\Models\BusinessOwner;
 use App\Models\DiscoverySession;
 use App\Services\Ai\Tools\Suggest\AbstractSuggestionAssembler;
 use App\Services\Ai\Tools\Suggest\BrandingSuggestionAssembler;
 use App\Services\Ai\Tools\Suggest\BriefContext;
+use App\Services\Ai\Tools\Suggest\BriefGrader;
 use App\Services\Ai\Tools\Suggest\ContentSocialSuggestionAssembler;
 use App\Services\Ai\Tools\Suggest\GrowthSuggestionAssembler;
 use App\Services\Ai\Tools\Suggest\ServiceSuggestionAssembler;
@@ -98,15 +101,45 @@ class SuggestionController extends Controller
         return $this->respond($result, $scoped, $session);
     }
 
+    /**
+     * S5.7 async-reveal: the second, per-brief request the panel fires after
+     * the cards have rendered. Runs the brief.grade judge synchronously
+     * (cheap model, tight cap) and returns the brief only if the rubric mode
+     * lets it through — a failed or budget-gated grade in enforce mode simply
+     * means no brief. Idempotent: an already-graded row returns its stored
+     * outcome without a second judge call.
+     */
+    public function revealBrief(Request $request, AdvisoryBrief $advisoryBrief, BriefGrader $grader): JsonResponse
+    {
+        [$businessOwner] = $this->context($request);
+
+        abort_unless($advisoryBrief->business_owner_id === $businessOwner->id, 404);
+
+        if ($advisoryBrief->verdict !== AdvisoryBriefVerdict::Shown) {
+            return response()->json(['brief' => null]);
+        }
+
+        if ($advisoryBrief->composite !== null) {
+            return response()->json(['brief' => $advisoryBrief->brief]);
+        }
+
+        return response()->json(['brief' => $grader->gradeRecord($advisoryBrief)]);
+    }
+
     private function respond(SuggestionResult $result, AbstractSuggestionAssembler $assembler, DiscoverySession $session): JsonResponse
     {
         if ($result->successful) {
             return response()->json([
                 'status' => 'ok',
                 'suggestions' => $result->cards,
-                // S5.6 advisory brief — null when the tool doesn't produce
-                // one or the deterministic gate dropped it; cards stand alone.
-                'brief' => $result->brief,
+                // S5.7 async-reveal: the brief itself is held back — the panel
+                // posts to this URL after rendering the cards, the judge runs,
+                // and the brief appears a beat later if it clears the gate.
+                // Null when the tool doesn't produce a brief or the S5.6
+                // deterministic gate dropped it; cards stand alone.
+                'brief_url' => $result->pendingBriefId !== null
+                    ? route('discovery.suggest.brief_reveal', ['advisoryBrief' => $result->pendingBriefId])
+                    : null,
             ]);
         }
 
@@ -115,7 +148,7 @@ class SuggestionController extends Controller
         return response()->json([
             'status' => 'unavailable',
             'suggestions' => $assembler->presetCards($session),
-            'brief' => null,
+            'brief_url' => null,
         ]);
     }
 

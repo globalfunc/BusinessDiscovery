@@ -25,7 +25,19 @@ class BriefExemplarSelector
      */
     public function selectFor(DiscoverySession $session): Collection
     {
-        $haystack = mb_strtolower($this->contextText($session));
+        return $this->selectForText($this->contextText($session));
+    }
+
+    /**
+     * Same selection against a raw context string — the S5.7 eval harness
+     * runs gold-set DCP digests through here so the exemplar choice matches
+     * what a live session with that context would get.
+     *
+     * @return Collection<int, BriefExemplar>
+     */
+    public function selectForText(string $context): Collection
+    {
+        $haystack = mb_strtolower($context);
 
         return BriefExemplar::query()
             ->where('active', true)

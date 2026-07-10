@@ -133,7 +133,10 @@ class AdvisoryBriefTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonPath('status', 'ok');
-        $response->assertJsonPath('brief.paragraph', $this->groundedBrief()['paragraph']);
+        // S5.7 async-reveal: the brief itself is held back; the response
+        // carries the reveal URL for the gate-passing row instead.
+        $this->assertNotNull($response->json('brief_url'));
+        $this->assertNull($response->json('brief'));
 
         $this->assertDatabaseHas('advisory_briefs', [
             'business_owner_id' => $this->businessOwner->id,
@@ -156,7 +159,7 @@ class AdvisoryBriefTest extends TestCase
 
         $response->assertJsonPath('status', 'ok');
         $response->assertJsonCount(3, 'suggestions');
-        $response->assertJsonPath('brief', null);
+        $response->assertJsonPath('brief_url', null);
 
         $this->assertDatabaseHas('advisory_briefs', [
             'verdict' => 'dropped',
@@ -171,7 +174,7 @@ class AdvisoryBriefTest extends TestCase
 
         $this->fakeAiClient(true, json_encode($this->payload($brief)));
 
-        $this->postSuggest('discovery.suggest.content_social')->assertJsonPath('brief', null);
+        $this->postSuggest('discovery.suggest.content_social')->assertJsonPath('brief_url', null);
 
         $this->assertDatabaseHas('advisory_briefs', ['drop_reason' => 'too_long']);
     }
@@ -183,7 +186,7 @@ class AdvisoryBriefTest extends TestCase
 
         $this->fakeAiClient(true, json_encode($this->payload($brief)));
 
-        $this->postSuggest('discovery.suggest.content_social')->assertJsonPath('brief', null);
+        $this->postSuggest('discovery.suggest.content_social')->assertJsonPath('brief_url', null);
 
         $this->assertDatabaseHas('advisory_briefs', ['drop_reason' => 'too_many_bullets']);
     }
@@ -197,7 +200,7 @@ class AdvisoryBriefTest extends TestCase
 
         $this->fakeAiClient(true, json_encode($this->payload($brief)));
 
-        $this->postSuggest('discovery.suggest.content_social')->assertJsonPath('brief', null);
+        $this->postSuggest('discovery.suggest.content_social')->assertJsonPath('brief_url', null);
 
         $this->assertDatabaseHas('advisory_briefs', ['drop_reason' => 'ungrounded']);
     }
@@ -209,7 +212,7 @@ class AdvisoryBriefTest extends TestCase
         $response = $this->postSuggest('discovery.suggest.content_social');
 
         $response->assertJsonPath('status', 'ok');
-        $response->assertJsonPath('brief', null);
+        $response->assertJsonPath('brief_url', null);
 
         $this->assertDatabaseHas('advisory_briefs', [
             'verdict' => 'dropped',
@@ -222,8 +225,9 @@ class AdvisoryBriefTest extends TestCase
     {
         $this->fakeAiClient(true, json_encode($this->payload($this->groundedBrief())));
 
-        $this->postSuggest('discovery.suggest.growth', ['module' => 'marketing'])
-            ->assertJsonPath('brief.paragraph', $this->groundedBrief()['paragraph']);
+        $this->assertNotNull(
+            $this->postSuggest('discovery.suggest.growth', ['module' => 'marketing'])->json('brief_url'),
+        );
 
         $this->assertDatabaseHas('advisory_briefs', [
             'phase' => DiscoveryPhase::Phase5->value,
@@ -242,7 +246,7 @@ class AdvisoryBriefTest extends TestCase
         $response = $this->postSuggest('discovery.suggest.services');
 
         $response->assertJsonPath('status', 'ok');
-        $response->assertJsonPath('brief', null);
+        $response->assertJsonPath('brief_url', null);
         $this->assertDatabaseCount('advisory_briefs', 0);
     }
 
@@ -295,7 +299,7 @@ class AdvisoryBriefTest extends TestCase
         $this->assertContains(['id' => $exemplar->id, 'version' => 3], $row->exemplars);
     }
 
-    public function test_admin_can_view_the_readonly_exemplar_library(): void
+    public function test_admin_can_view_the_exemplar_library(): void
     {
         BriefExemplar::create([
             'context_tags' => ['barber'],
